@@ -1,0 +1,848 @@
+<!DOCTYPE html>
+<html lang="uk">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>Батьківський комітет 1Б</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+<script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+<script src="https://unpkg.com/@babel/standalone@7.9.0/babel.min.js"></script>
+<style>
+*{box-sizing:border-box}
+body{margin:0;background:#f1f5f9;-webkit-tap-highlight-color:transparent;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',system-ui,sans-serif}
+.noscroll::-webkit-scrollbar{display:none}.noscroll{-ms-overflow-style:none;scrollbar-width:none}
+.pre{white-space:pre-wrap;font-family:'Courier New',monospace}
+.photo-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:6px}
+.chevron{transition:transform .2s}.chevron.open{transform:rotate(180deg)}
+.card{background:#fff;border-radius:16px;box-shadow:0 2px 16px rgba(0,0,0,.07);overflow:hidden}
+.card-inner{padding:16px}
+.grad-violet{background:linear-gradient(135deg,#7c3aed,#4f46e5)}
+.grad-emerald{background:linear-gradient(135deg,#059669,#0891b2)}
+.grad-amber{background:linear-gradient(135deg,#d97706,#dc2626)}
+.grad-rose{background:linear-gradient(135deg,#e11d48,#9333ea)}
+.grad-sky{background:linear-gradient(135deg,#0284c7,#6366f1)}
+.badge{display:inline-flex;align-items:center;padding:2px 10px;border-radius:99px;font-size:11px;font-weight:600}
+.medal-gold{background:linear-gradient(135deg,#fbbf24,#f59e0b);color:#fff}
+.medal-silver{background:linear-gradient(135deg,#9ca3af,#6b7280);color:#fff}
+.medal-bronze{background:linear-gradient(135deg,#d97706,#b45309);color:#fff}
+.tab-icon{font-size:18px;line-height:1}
+input,select,textarea{font-family:inherit}
+</style>
+</head>
+<body>
+<div id="root"><div style="display:flex;align-items:center;justify-content:center;height:100vh;font-family:sans-serif;color:#6d28d9;font-size:14px;flex-direction:column;gap:8px"><div style="width:32px;height:32px;border:3px solid #6d28d9;border-top-color:transparent;border-radius:50%;animation:spin 0.8s linear infinite"></div><span>Завантаження...</span></div></div>
+<style>@keyframes spin{to{transform:rotate(360deg)}}</style>
+<script>
+window.onerror=function(msg,src,line){
+  if(!msg||msg==="Script error."||msg==="ResizeObserver loop limit exceeded") return false;
+  var el=document.getElementById("root");
+  if(el) el.innerHTML='<div style="padding:20px;background:#fee2e2;border:2px solid #ef4444;border-radius:12px;margin:20px;font-family:monospace;font-size:13px;color:#991b1b"><b>Помилка завантаження:</b><br>'+msg+'<br><small>рядок '+line+'</small></div>';
+};
+</script>
+<script type="text/babel">
+/* @jsxRuntime classic */
+const { useState, useEffect, useRef } = React;
+
+const ROLE_PASSWORDS = { teacher:"vchytel101", admin:"admin101", chairman:"golova101" };
+
+// ── TRANSLATIONS ──────────────────────────────────────────────────────────────
+const L = {
+ua:{
+  app:"Батьківський комітет", school:"1Б клас • Гімназія 101", cur:"грн",
+  roles:{parent:"Батько/Мати",teacher:"Вчитель",admin:"Адміністратор",chairman:"Голова комітету"},
+  tabs:{ann:"Новини",fin:"Фінанси",ev:"Події",par:"Батьки",pol:"Опитування",doc:"Документи",photo:"Фото",needs:"Потреби",help:"Допомога",top:"Топ"},
+  reg:{
+    welcome:"Ласкаво просимо",sub:"Зареєструйтесь для доступу",
+    name:"Ваше ім'я та прізвище",phone:"Номер телефону",child:"Ім'я та прізвище дитини",
+    role:"Ваша роль",pass:"Пароль ролі",passHint:"Введіть пароль",wrongPass:"Невірний пароль. Зверніться до адміністратора.",
+    c1:"Я погоджуюсь на збір даних",c2:"Я погоджуюсь з обробкою персональних даних",
+    submit:"Зареєструватися",err:"Заповніть всі поля та підтвердіть обидві згоди",
+    c1t:"Збір даних",c1b:"Цей застосунок збирає:\n• Ваше ім'я та прізвище\n• Номер телефону\n• Ім'я дитини\n• Роль у спільноті\n\nДані зберігаються локально та використовуються лише для роботи батьківського комітету. Не передаються третім особам.",
+    c2t:"Обробка персональних даних",c2b:"Відповідно до Закону України «Про захист персональних даних»:\n\nМета: організація навчально-виховного процесу та комунікація між батьками і педагогічним колективом.\n\nВаші права:\n• Доступ до своїх даних\n• Виправлення неточностей\n• Видалення даних\n• Відкликання згоди\n\nДля відкликання згоди зверніться до адміністратора.",
+  },
+  ann:{
+    title:"Оголошення",add:"Додати",new:"Нове оголошення",fTitle:"Заголовок",fText:"Текст",
+    pub:"Опублікувати",pin:"Закріплено",noAccess:"Публікувати можуть лише вчитель, адміністратор або голова комітету.",noItems:"Оголошень поки немає",
+  },
+  fin:{
+    title:"Фінанси",coll:"Зібрано",spent:"Витрачено",bal:"Залишок",
+    tColl:"Збори",tExp:"Витрати",newColl:"Новий збір",addExp:"Додати витрату",
+    colName:"Назва збору",colAmt:"Сума з особи (грн)",expDesc:"Опис",expAmt:"Сума (грн)",
+    paid:"Сплачено",notPaid:"Не сплачено",create:"Створити",pp:"/особа",
+  },
+  ev:{
+    title:"Заходи",add:"Додати",up:"Найближчі",past:"Минулі",bdays:"Дні народження",
+    vol:"Волонтери",noVol:"поки нікого",join:"Записатись",joined:"Ви записані",
+    today:"Сьогодні!",inDays:"за {n} дн.",passed:"минув",newEv:"Новий захід",
+    types:{meeting:"Збори",trip:"Екскурсія",birthday:"День народження",celebration:"Свято",other:"Інше"},
+  },
+  par:{
+    title:"Батьки",add:"Додати",comm:"Комітет",all:"Усі батьки",search:"Пошук...",
+    pName:"Ім'я батька / матері",cName:"Ім'я дитини",phone:"Телефон",role:"Роль",
+  },
+  pol:{
+    title:"Голосування",create:"Створити",active:"Активно",closed:"Закрито",
+    total:"Всього голосів",hint:"Натисніть щоб проголосувати",voted:"Ви проголосували",q:"Питання",
+  },
+  doc:{title:"Документи",teach:"Педагогічний склад",sched:"Розклад уроків"},
+  photo:{
+    title:"Фотоальбом класу",add:"Додати фото",noItems:"Фото ще немає. Будьте першим!",
+    by:"Додав(ла)",hint:"Оберіть фото",
+  },
+  needs:{
+    title:"Потреби класу",add:"Додати потребу",noItems:"Список потреб порожній",
+    item:"Назва",qty:"Кількість",desc:"Опис (необов'язково)",
+    canHelp:"Можу принести",helped:"Я допомагаю ✓",done:"Виконано",needed:"Потрібно",
+    noAccess:"Додавати можуть лише вчитель або адміністратор",newItem:"Нова потреба",
+  },
+  help:{
+    title:"Допомога та підтримка",sub:"Будь-хто може попросити про допомогу",
+    add:"Попросити допомогу",noItems:"Запитів поки немає",
+    types:{food:"Продукти",clothes:"Одяг / взуття",supplies:"Канцелярія",transport:"Транспорт",housing:"Житло",other:"Інше"},
+    anon:"Анонімно",contact:"Контакт (необов'язково)",desc:"Що потрібно?",typeL:"Вид допомоги",
+    canHelp:"Я можу допомогти 🤝",helped:"відгукнулись",newReq:"Новий запит",
+  },
+  top:{
+    title:"Топ класу",students:"Учні",parents:"Батьки",
+    addSt:"Додати учня",addPar:"Додати батьків",
+    noSt:"Поки нікого",noPar:"Поки нікого",
+    sCats:{grades:"Успішність 📚",attend:"Відвідуваність 📅",sport:"Спорт 🏅",art:"Творчість 🎨",science:"Наука 🔬",lead:"Лідерство 🌟"},
+    pCats:{vol:"Волонтерство",org:"Організація заходів",sup:"Підтримка класу",don:"Внески"},
+    levels:{gold:"🥇 Золото",silver:"🥈 Срібло",bronze:"🥉 Бронза"},
+    reason:"Заслуга / причина",sName:"Ім'я учня",pName:"Ім'я батьків",cat:"Категорія",lvl:"Рівень",
+    noAccess:"Додавати можуть лише вчитель або адміністратор",
+  },
+  common:{cancel:"Скасувати",add:"Додати",close:"Закрити"},
+},
+ru:{
+  app:"Родительский комитет",school:"1Б класс • Гимназия 101",cur:"грн",
+  roles:{parent:"Родитель",teacher:"Учитель",admin:"Администратор",chairman:"Председатель"},
+  tabs:{ann:"Новости",fin:"Финансы",ev:"События",par:"Родители",pol:"Опросы",doc:"Документы",photo:"Фото",needs:"Нужды",help:"Помощь",top:"Топ"},
+  reg:{
+    welcome:"Добро пожаловать",sub:"Зарегистрируйтесь для доступа",
+    name:"Ваше имя и фамилия",phone:"Номер телефона",child:"Имя ребёнка",
+    role:"Ваша роль",pass:"Пароль роли",passHint:"Введите пароль",wrongPass:"Неверный пароль. Обратитесь к администратору.",
+    c1:"Я соглашаюсь со сбором данных",c2:"Я соглашаюсь с обработкой персональных данных",
+    submit:"Зарегистрироваться",err:"Заполните все поля и подтвердите оба согласия",
+    c1t:"Сбор данных",c1b:"Это приложение собирает:\n• Имя и фамилию\n• Номер телефона\n• Имя ребёнка\n• Роль в сообществе\n\nДанные хранятся локально и используются только для работы родительского комитета. Третьим лицам не передаются.",
+    c2t:"Обработка персональных данных",c2b:"В соответствии с Законом Украины «О защите персональных данных»:\n\nЦель: организация учебно-воспитательного процесса и коммуникация между родителями и педагогическим коллективом.\n\nВаши права:\n• Доступ к данным\n• Исправление данных\n• Удаление данных\n• Отзыв согласия\n\nДля отзыва обратитесь к администратору.",
+  },
+  ann:{title:"Объявления",add:"Добавить",new:"Новое объявление",fTitle:"Заголовок",fText:"Текст",pub:"Опубликовать",pin:"Закреплено",noAccess:"Публиковать могут только учитель, администратор или председатель.",noItems:"Объявлений пока нет"},
+  fin:{title:"Финансы",coll:"Собрано",spent:"Потрачено",bal:"Остаток",tColl:"Сборы",tExp:"Расходы",newColl:"Новый сбор",addExp:"Добавить расход",colName:"Название сбора",colAmt:"Сумма с человека (грн)",expDesc:"Описание",expAmt:"Сумма (грн)",paid:"Оплачено",notPaid:"Не оплачено",create:"Создать",pp:"/чел"},
+  ev:{title:"Мероприятия",add:"Добавить",up:"Предстоящие",past:"Прошедшие",bdays:"Дни рождения",vol:"Волонтёры",noVol:"пока никого",join:"Записаться",joined:"Вы записаны",today:"Сегодня!",inDays:"через {n} дн.",passed:"прошёл",newEv:"Новое мероприятие",types:{meeting:"Собрание",trip:"Экскурсия",birthday:"День рождения",celebration:"Праздник",other:"Другое"}},
+  par:{title:"Родители",add:"Добавить",comm:"Комитет",all:"Все родители",search:"Поиск...",pName:"Имя родителя",cName:"Имя ребёнка",phone:"Телефон",role:"Роль"},
+  pol:{title:"Голосования",create:"Создать",active:"Активно",closed:"Закрыто",total:"Всего голосов",hint:"Нажмите чтобы проголосовать",voted:"Вы проголосовали",q:"Вопрос"},
+  doc:{title:"Документы",teach:"Педагогический состав",sched:"Расписание уроков"},
+  photo:{title:"Фотоальбом класса",add:"Добавить фото",noItems:"Фото ещё нет. Будьте первым!",by:"Добавил(а)",hint:"Выберите фото"},
+  needs:{title:"Нужды класса",add:"Добавить",noItems:"Список нужд пуст",item:"Название",qty:"Количество",desc:"Описание (необязательно)",canHelp:"Могу принести",helped:"Я помогаю ✓",done:"Выполнено",needed:"Нужно",noAccess:"Добавлять могут только учитель или администратор",newItem:"Новая нужда"},
+  help:{title:"Помощь и поддержка",sub:"Любой может попросить о помощи",add:"Попросить помощь",noItems:"Запросов пока нет",types:{food:"Продукты",clothes:"Одежда / обувь",supplies:"Канцтовары",transport:"Транспорт",housing:"Жильё",other:"Другое"},anon:"Анонимно",contact:"Контакт (необязательно)",desc:"Что нужно?",typeL:"Вид помощи",canHelp:"Я могу помочь 🤝",helped:"откликнулись",newReq:"Новый запрос"},
+  top:{title:"Топ класса",students:"Ученики",parents:"Родители",addSt:"Добавить ученика",addPar:"Добавить родителей",noSt:"Пока никого",noPar:"Пока никого",sCats:{grades:"Успеваемость 📚",attend:"Посещаемость 📅",sport:"Спорт 🏅",art:"Творчество 🎨",science:"Наука 🔬",lead:"Лидерство 🌟"},pCats:{vol:"Волонтёрство",org:"Организация мероприятий",sup:"Поддержка класса",don:"Взносы"},levels:{gold:"🥇 Золото",silver:"🥈 Серебро",bronze:"🥉 Бронза"},reason:"Заслуга / причина",sName:"Имя ученика",pName:"Имя родителей",cat:"Категория",lvl:"Уровень",noAccess:"Добавлять могут только учитель или администратор"},
+  common:{cancel:"Отмена",add:"Добавить",close:"Закрыть"},
+}};
+
+// ── DATA ──────────────────────────────────────────────────────────────────────
+const DOCS_DATA=[
+  {id:1,icon:"📋",date:"2025-09-10",name:"Протокол зборів №1",nameRu:"Протокол собрания №1",
+   content:"ПРОТОКОЛ №1 батьківських зборів 1Б класу Гімназії 101\nДата: 10.09.2025\nГоловуючий: Іванова Марина\n\nПОРЯДОК ДЕННОГО:\n1. Організаційні питання\n2. Вибори комітету\n3. Фінансові питання\n\nВИРІШИЛИ:\n✓ Голова — Іванова Марина\n✓ Казначей — Петренко Олексій\n✓ Внески — 300 грн/міс\n✓ Наступні збори — листопад 2025",
+   contentRu:"ПРОТОКОЛ №1 родительского собрания 1Б класса Гимназии 101\nДата: 10.09.2025\nПредседатель: Иванова Марина\n\nПОВЕСТКА:\n1. Организационные вопросы\n2. Выборы комитета\n3. Финансовые вопросы\n\nРЕШИЛИ:\n✓ Председатель — Иванова Марина\n✓ Казначей — Петренко Алексей\n✓ Взносы — 300 грн/мес\n✓ Следующее собрание — ноябрь 2025"},
+  {id:2,icon:"👥",date:"2025-09-01",name:"Список батьків 1Б класу",nameRu:"Список родителей 1Б",
+   content:"СПИСОК БАТЬКІВ 1Б КЛАСУ • 2025–2026\n\n1. Іванова Марина — Іванов Олексій — +380 99 123 45 67\n2. Петренко Олексій — Петренко Аня — +380 99 234 56 78\n3. Сидоренко Ольга — Сидоренко Микола — +380 99 345 67 89\n4. Козловська Тетяна — Козловський Дмитро — +380 99 456 78 90\n...\n\nКл. керівник: Смирнова А.І. +380 99 100 11 22",
+   contentRu:"СПИСОК РОДИТЕЛЕЙ 1Б КЛАССА • 2025–2026\n\n1. Иванова Марина — Иванов Алексей — +380 99 123 45 67\n2. Петренко Алексей — Петренко Аня — +380 99 234 56 78\n3. Сидоренко Ольга — Сидоренко Николай — +380 99 345 67 89\n4. Козловская Татьяна — Козловский Дмитрий — +380 99 456 78 90\n...\n\nКл. руководитель: Смирнова А.И. +380 99 100 11 22"},
+  {id:3,icon:"💰",date:"2025-12-31",name:"Звіт про витрати I півріччя",nameRu:"Отчёт о расходах I полугодия",
+   content:"ФІНАНСОВИЙ ЗВІТ • I півріччя 2025–2026\n\nНАДХОДЖЕННЯ:\nВнески (25 сімей × 300 × 3 міс)  22 500 грн\nДодаткові внески               +500 грн\nРАЗОМ:                          23 000 грн\n\nВИТРАТИ:\n01.09 Квіти на 1 вересня       1 450 грн\n15.10 Канцелярія                1 200 грн\n20.11 Похід до театру           3 750 грн\n20.12 Новорічні подарунки       8 750 грн\n25.12 Прикраси класу              980 грн\nРАЗОМ:                          16 130 грн\n\nЗАЛИШОК: 6 870 грн",
+   contentRu:"ФИНАНСОВЫЙ ОТЧЁТ • I полугодие 2025–2026\n\nПОСТУПЛЕНИЯ:\nВзносы (25 семей × 300 × 3 мес)  22 500 грн\nДоп. взносы                      +500 грн\nИТОГО:                           23 000 грн\n\nРАСХОДЫ:\n01.09 Цветы на 1 сентября        1 450 грн\n15.10 Канцтовары                  1 200 грн\n20.11 Поход в театр               3 750 грн\n20.12 Новогодние подарки          8 750 грн\n25.12 Украшения класса              980 грн\nИТОГО:                           16 130 грн\n\nОСТАТОК: 6 870 грн"},
+  {id:4,icon:"📌",date:"2025-09-01",name:"Пам'ятка для батьків першокласників",nameRu:"Памятка для родителей первоклассников",
+   content:"ПАМ'ЯТКА ДЛЯ БАТЬКІВ • Гімназія 101, 1Б клас\n\nРЕЖИМ:\n• Початок уроків: 8:30\n• Прийом учнів: з 8:00\n• Продовжена група: до 17:00\n\nПОРТФЕЛЬ:\n✓ Щоденник, пенал, зошити\n✓ Змінне взуття, вода\n✓ Невеликий перекус\n\nФОРМА:\n• Верх: біла/блакитна сорочка\n• Низ: темні штани/спідниця\n\nКОНТАКТИ:\nКл. керівник: Смирнова А.І.\n+380 99 100 11 22\nГімназія: +380 44 000 11 22",
+   contentRu:"ПАМЯТКА ДЛЯ РОДИТЕЛЕЙ • Гимназия 101, 1Б класс\n\nРЕЖИМ:\n• Начало уроков: 8:30\n• Приём с 8:00\n• Продлёнка до 17:00\n\nПОРТФЕЛЬ:\n✓ Дневник, пенал, тетради\n✓ Сменная обувь, вода\n✓ Небольшой перекус\n\nФОРМА:\n• Верх: белая/голубая рубашка\n• Низ: тёмные брюки/юбка\n\nКОНТАКТЫ:\nКл. рук.: Смирнова А.И.\n+380 99 100 11 22\nГимназия: +380 44 000 11 22"},
+];
+const SCHEDULE=[
+  {d:"Пн",l:["Математика","Укр. мова","Читання","Фізкультура"]},
+  {d:"Вт",l:["Математика","Англійська","Образотворче","Музика"]},
+  {d:"Ср",l:["Укр. мова","Математика","Я досліджую світ","Фізкультура"]},
+  {d:"Чт",l:["Читання","Математика","Трудове","Англійська"]},
+  {d:"Пт",l:["Математика","Укр. мова","Я досліджую світ","Фізкультура"]},
+];
+const TEACHERS=[
+  {n:"Смирнова Анна Іванівна",nRu:"Смирнова Анна Ивановна",s:"Класний керівник, Математика",sRu:"Классный руководитель, Математика",p:"+380 99 100 11 22"},
+  {n:"Кузнецова Олена Петрівна",nRu:"Кузнецова Елена Петровна",s:"Укр. мова та читання",sRu:"Укр. язык и чтение",p:"+380 99 200 22 33"},
+  {n:"Попов Дмитро Сергійович",nRu:"Попов Дмитрий Сергеевич",s:"Фізкультура",sRu:"Физкультура",p:"+380 99 300 33 44"},
+];
+const BDAYS=[
+  {n:"Олексій І.",nRu:"Алексей И.",d:"2026-06-22"},
+  {n:"Аня П.",nRu:"Аня П.",d:"2026-07-10"},
+  {n:"Микола С.",nRu:"Николай С.",d:"2026-08-03"},
+];
+const EVT_S={
+  meeting:{dot:"bg-blue-500",bg:"bg-blue-50",text:"text-blue-700"},
+  trip:{dot:"bg-emerald-500",bg:"bg-emerald-50",text:"text-emerald-700"},
+  birthday:{dot:"bg-rose-400",bg:"bg-rose-50",text:"text-rose-700"},
+  celebration:{dot:"bg-violet-500",bg:"bg-violet-50",text:"text-violet-700"},
+  other:{dot:"bg-amber-400",bg:"bg-amber-50",text:"text-amber-700"},
+};
+const HELP_COLORS={food:"bg-orange-100 text-orange-700",clothes:"bg-purple-100 text-purple-700",supplies:"bg-blue-100 text-blue-700",transport:"bg-green-100 text-green-700",housing:"bg-red-100 text-red-700",other:"bg-gray-100 text-gray-700"};
+const TOP_LEVEL_STYLE={gold:"medal-gold",silver:"medal-silver",bronze:"medal-bronze"};
+const CAN_POST=["teacher","admin","chairman"];
+const CAN_MANAGE=["teacher","admin"];
+
+// ── UTILS ─────────────────────────────────────────────────────────────────────
+const today=()=>new Date().toISOString().split("T")[0];
+const daysUntil=d=>Math.ceil((new Date(d)-new Date(today()))/86400000);
+const INI=n=>n.split(" ").slice(0,2).map(w=>w[0]).join("").toUpperCase();
+const AVT_CLR=n=>["bg-violet-200 text-violet-800","bg-blue-200 text-blue-800","bg-emerald-200 text-emerald-800","bg-amber-200 text-amber-800","bg-rose-200 text-rose-800"][n.charCodeAt(0)%5];
+
+// ── UI ────────────────────────────────────────────────────────────────────────
+const INP="w-full border border-slate-200 rounded-xl px-3 py-2.5 text-sm text-slate-900 focus:outline-none focus:ring-2 focus:ring-violet-400 focus:border-transparent placeholder-slate-400 bg-slate-50";
+const INP_SM="w-full border border-slate-200 rounded-xl px-3 py-2 text-sm text-slate-900 focus:outline-none focus:ring-2 focus:ring-violet-400 bg-slate-50";
+
+function Modal({show,onClose,title,children}){
+  if(!show)return null;
+  return(
+    <div className="fixed inset-0 bg-black/60 flex items-end sm:items-center justify-center z-50 p-4" onClick={e=>e.target===e.currentTarget&&onClose()}>
+      <div className="bg-white rounded-3xl w-full max-w-md shadow-2xl max-h-[90vh] flex flex-col">
+        <div className="flex items-center justify-between px-5 py-4 border-b border-slate-100 flex-shrink-0">
+          <h3 className="font-bold text-slate-900">{title}</h3>
+          <button onClick={onClose} className="w-9 h-9 flex items-center justify-center rounded-full bg-slate-100 hover:bg-slate-200 text-slate-500 text-lg leading-none transition-colors">×</button>
+        </div>
+        <div className="p-5 overflow-y-auto flex-1">{children}</div>
+      </div>
+    </div>
+  );
+}
+function Fld({label,children}){return <div><label className="block text-xs font-semibold text-slate-500 uppercase tracking-wide mb-1.5">{label}</label>{children}</div>}
+function Btn({v="pri",cls="",ch,...p}){
+  const s={pri:"bg-gradient-to-r from-violet-600 to-indigo-600 hover:from-violet-700 hover:to-indigo-700 text-white shadow-md shadow-violet-200",sec:"bg-slate-100 hover:bg-slate-200 text-slate-700",ghost:"text-violet-600 hover:bg-violet-50",sm:"bg-violet-100 text-violet-700 hover:bg-violet-200 text-sm"};
+  return <button className={`rounded-xl px-4 py-2.5 text-sm font-semibold transition-all ${s[v]} ${cls}`} {...p}>{ch||p.children}</button>;
+}
+function Av({name,sz="md"}){
+  const s={sm:"w-8 h-8 text-xs",md:"w-10 h-10 text-sm",lg:"w-12 h-12 text-base"};
+  return <div className={`${s[sz]} ${AVT_CLR(name)} rounded-full flex items-center justify-center font-bold flex-shrink-0`}>{INI(name)}</div>;
+}
+function SL({children}){return <p className="text-xs font-bold text-slate-400 uppercase tracking-widest mb-2 mt-5 first:mt-0">{children}</p>}
+function Empty({text}){return <div className="text-center py-14 text-slate-400"><div className="text-4xl mb-3">🫙</div><p className="text-sm">{text}</p></div>}
+
+// ── REGISTRATION ──────────────────────────────────────────────────────────────
+function RegScreen({lang,setLang,onReg}){
+  const t=L[lang];const r=t.reg;
+  const [form,setForm]=useState({name:"",phone:"",child:"",role:"parent",pass:""});
+  const [c1,setC1]=useState(false);const[c2,setC2]=useState(false);
+  const [err,setErr]=useState("");const[cm,setCm]=useState(null);
+  const needPass=form.role!=="parent";
+  const set=(k,v)=>setForm(f=>({...f,[k]:v}));
+  const submit=()=>{
+    if(!form.name.trim()||!form.child.trim()||!c1||!c2){setErr(r.err);return;}
+    if(needPass&&form.pass!==ROLE_PASSWORDS[form.role]){setErr(r.wrongPass);return;}
+    const u={id:Date.now(),name:form.name,phone:form.phone,child:form.child,role:form.role};
+    localStorage.setItem("rc_user",JSON.stringify(u));onReg(u);
+  };
+  return(
+    <div className="min-h-screen flex flex-col items-center justify-center p-4" style={{background:"linear-gradient(135deg,#f0f4ff 0%,#faf0ff 100%)"}}>
+      <div className="absolute top-4 right-4 flex gap-1 bg-white/80 border border-white rounded-xl p-1 backdrop-blur shadow-sm">
+        {["ua","ru"].map(l=><button key={l} onClick={()=>setLang(l)} className={`px-3 py-1 rounded-lg text-xs font-bold transition-all ${lang===l?"bg-gradient-to-r from-violet-600 to-indigo-600 text-white shadow":"text-slate-500"}`}>{l.toUpperCase()}</button>)}
+      </div>
+      <div className="w-full max-w-sm">
+        <div className="text-center mb-8">
+          <div className="w-20 h-20 rounded-3xl flex items-center justify-center mx-auto mb-4 shadow-xl shadow-violet-300/50" style={{background:"linear-gradient(135deg,#7c3aed,#4f46e5)"}}>
+            <span className="text-white text-3xl font-black">1Б</span>
+          </div>
+          <h1 className="text-2xl font-black text-slate-900">{r.welcome}</h1>
+          <p className="text-slate-500 text-sm mt-1">{r.sub}</p>
+          <p className="text-violet-600 text-sm font-semibold mt-1">{t.school}</p>
+        </div>
+        <div className="bg-white rounded-3xl shadow-xl shadow-slate-200/80 p-6 space-y-4">
+          <Fld label={r.name}><input className={INP} placeholder={r.name} value={form.name} onChange={e=>set("name",e.target.value)}/></Fld>
+          <Fld label={r.phone}><input className={INP} placeholder="+380 00 000 00 00" value={form.phone} onChange={e=>set("phone",e.target.value)}/></Fld>
+          <Fld label={r.child}><input className={INP} placeholder={r.child} value={form.child} onChange={e=>set("child",e.target.value)}/></Fld>
+          <Fld label={r.role}><select className={INP} value={form.role} onChange={e=>set("role",e.target.value)}>{Object.entries(t.roles).map(([k,v])=><option key={k} value={k}>{v}</option>)}</select></Fld>
+          {needPass&&<Fld label={r.pass}><input className={INP} type="password" placeholder={r.passHint} value={form.pass} onChange={e=>set("pass",e.target.value)}/></Fld>}
+          <div className="pt-2 space-y-3 border-t border-slate-100">
+            {[[c1,setC1,r.c1,1],[c2,setC2,r.c2,2]].map(([st,setSt,lbl,idx])=>(
+              <div key={idx} className="flex items-start gap-3">
+                <input type="checkbox" id={`c${idx}`} checked={st} onChange={e=>setSt(e.target.checked)} className="mt-0.5 w-4 h-4 accent-violet-600 flex-shrink-0 cursor-pointer"/>
+                <label htmlFor={`c${idx}`} className="text-sm text-slate-700 leading-snug">
+                  <button type="button" onClick={()=>setCm(idx)} className="text-violet-600 hover:text-violet-800 underline underline-offset-2 decoration-dashed font-semibold">{lbl}</button>
+                </label>
+              </div>
+            ))}
+          </div>
+          {err&&<p className="text-rose-500 text-xs font-medium">{err}</p>}
+          <Btn cls="w-full text-center justify-center" onClick={submit}>{r.submit}</Btn>
+        </div>
+      </div>
+      {[1,2].map(idx=>(
+        <Modal key={idx} show={cm===idx} onClose={()=>setCm(null)} title={idx===1?r.c1t:r.c2t}>
+          <p className="text-sm text-slate-700 whitespace-pre-line leading-relaxed">{idx===1?r.c1b:r.c2b}</p>
+          <div className="mt-4 flex justify-end"><Btn onClick={()=>{idx===1?setC1(true):setC2(true);setCm(null);}}>OK</Btn></div>
+        </Modal>
+      ))}
+    </div>
+  );
+}
+
+// ── MAIN ──────────────────────────────────────────────────────────────────────
+function App(){
+  const[lang,setLang]=useState(()=>localStorage.getItem("rc_lang")||"ua");
+  const[user,setUser]=useState(()=>{try{return JSON.parse(localStorage.getItem("rc_user"))||null;}catch(e){return null;}});
+  useEffect(()=>localStorage.setItem("rc_lang",lang),[lang]);
+  useEffect(()=>{const tg=window.Telegram&&window.Telegram.WebApp;if(tg){tg.ready();tg.expand();};},[]);
+  if(!user)return<RegScreen lang={lang} setLang={setLang} onReg={u=>setUser(u)}/>;
+  return<MainApp lang={lang} setLang={setLang} user={user}/>;
+}
+
+function MainApp({lang,setLang,user}){
+  const t=L[lang];const ua=lang==="ua";
+  const [tab,setTab]=useState("ann");
+  const [modal,setModal]=useState(null);
+  const [ann,setAnn]=useState([
+    {id:1,title:"Батьківські збори",titleRu:"Родительское собрание",text:"Збори 20 червня о 18:00 в класі.",textRu:"Собрание 20 июня в 18:00 в классе.",date:"2026-06-18",author:"Анна Іванівна",pinned:true},
+    {id:2,title:"Збір коштів на подарунок",titleRu:"Сбор средств на подарок",text:"300 грн до 25 червня.",textRu:"300 грн до 25 июня.",date:"2026-06-15",author:"Марина В.",pinned:false},
+  ]);
+  const [parents,setParents]=useState([
+    {id:1,name:"Іванова Марина",nameRu:"Иванова Марина",child:"Іванов Олексій",childRu:"Иванов Алексей",phone:"+380 99 123 45 67",role:"chairman"},
+    {id:2,name:"Петренко Олексій",nameRu:"Петренко Алексей",child:"Петренко Аня",childRu:"Петренко Аня",phone:"+380 99 234 56 78",role:"parent"},
+    {id:3,name:"Сидоренко Ольга",nameRu:"Сидоренко Ольга",child:"Сидоренко Микола",childRu:"Сидоренко Николай",phone:"+380 99 345 67 89",role:"parent"},
+  ]);
+  const [colls,setColls]=useState([{id:1,name:"Подарунок вчителю",nameRu:"Подарок учителю",amount:300,payments:[{id:1,p:"Іванова Марина",pRu:"Иванова Марина",paid:true},{id:2,p:"Петренко Олексій",pRu:"Петренко Алексей",paid:true},{id:3,p:"Сидоренко Ольга",pRu:"Сидоренко Ольга",paid:false}]}]);
+  const [exps,setExps]=useState([{id:1,desc:"Квіти на 1 вересня",descRu:"Цветы на 1 сентября",amount:450,date:"2025-09-01"},{id:2,desc:"Прикраси",descRu:"Украшения",amount:620,date:"2025-12-20"}]);
+  const [events,setEvents]=useState([{id:1,title:"Батьківські збори",titleRu:"Родительское собрание",date:"2026-06-20",time:"18:00",type:"meeting",vol:[]},{id:2,title:"Екскурсія",titleRu:"Экскурсия",date:"2026-06-28",time:"10:00",type:"trip",vol:["Іванова Марина"]}]);
+  const [polls,setPolls]=useState([{id:1,q:"Куди поїдемо на екскурсію?",qRu:"Куда поедем на экскурсию?",opts:["Музей","Зоопарк","Планетарій","Парк"],optsRu:["Музей","Зоопарк","Планетарий","Парк"],votes:[3,8,5,4],voted:null,active:true}]);
+  const [photos,setPhotos]=useState([]);
+  const [needs,setNeeds]=useState([{id:1,item:"Маркери для дошки",itemRu:"Маркеры для доски",qty:"2 набори",desc:"Сині та чорні",descRu:"Синие и черные",helpers:[],done:false},{id:2,item:"Серветки",itemRu:"Салфетки",qty:"3 пачки",desc:"",descRu:"",helpers:[],done:false}]);
+  const [helpReqs,setHelpReqs]=useState([{id:1,type:"supplies",anon:false,name:"Сидоренко Ольга",nameRu:"Сидоренко Ольга",desc:"Потрібні кольорові олівці для дитини та зошити",descRu:"Нужны цветные карандаши и тетради",contact:"",date:"2026-06-10",helpers:3}]);
+  const [topSt,setTopSt]=useState([{id:1,name:"Іванов Олексій",nameRu:"Иванов Алексей",cat:"grades",lvl:"gold",reason:"Відмінник I семестру",reasonRu:"Отличник I семестра",date:"2026-01-15"},{id:2,name:"Петренко Аня",nameRu:"Петренко Аня",cat:"art",lvl:"silver",reason:"Призер міської олімпіади з малювання",reasonRu:"Призёр городской олимпиады по рисованию",date:"2026-02-20"}]);
+  const [topPar,setTopPar]=useState([{id:1,name:"Іванова Марина",nameRu:"Иванова Марина",cat:"org",reason:"Організувала 3 заходи класу",reasonRu:"Организовала 3 мероприятия класса",date:"2026-03-01"}]);
+  const [docOpen,setDocOpen]=useState({});
+  const [finTab,setFinTab]=useState("coll");
+  const [topTab,setTopTab]=useState("students");
+  const [psearch,setPsearch]=useState("");
+  const fileRef=useRef(null);
+
+  // forms
+  const [fAnn,setFAnn]=useState({title:"",text:""});
+  const [fEv,setFEv]=useState({title:"",date:"",time:"",type:"meeting"});
+  const [fExp,setFExp]=useState({desc:"",amount:""});
+  const [fCol,setFCol]=useState({name:"",amount:""});
+  const [fPar,setFPar]=useState({name:"",child:"",phone:"",role:"parent"});
+  const [fPoll,setFPoll]=useState({q:"",opts:["","","",""]});
+  const [fNeed,setFNeed]=useState({item:"",qty:"",desc:""});
+  const [fHelp,setFHelp]=useState({type:"food",anon:false,name:"",desc:"",contact:""});
+  const [fTopSt,setFTopSt]=useState({name:"",cat:"grades",lvl:"gold",reason:""});
+  const [fTopPar,setFTopPar]=useState({name:"",cat:"vol",reason:""});
+  const [photoModal,setPhotoModal]=useState(null);
+
+  const canPost=CAN_POST.includes(user.role);
+  const canMgr=CAN_MANAGE.includes(user.role);
+  const totColl=colls.reduce((s,c)=>s+c.payments.filter(p=>p.paid).length*c.amount,0);
+  const totExp=exps.reduce((s,e)=>s+e.amount,0);
+  const upBday=BDAYS.map(b=>({...b,days:daysUntil(b.d)})).filter(b=>b.days>=0&&b.days<=30).sort((a,b)=>a.days-b.days)[0];
+
+  const addAnn=()=>{if(!fAnn.title.trim()||!fAnn.text.trim())return;setAnn(p=>[{id:Date.now(),title:fAnn.title,titleRu:fAnn.title,text:fAnn.text,textRu:fAnn.text,date:today(),author:user.name,pinned:false},...p]);setFAnn({title:"",text:""});setModal(null);};
+  const addEv=()=>{if(!fEv.title.trim()||!fEv.date)return;setEvents(p=>[...p,{id:Date.now(),title:fEv.title,titleRu:fEv.title,date:fEv.date,time:fEv.time,type:fEv.type,vol:[]}].sort((a,b)=>a.date.localeCompare(b.date)));setFEv({title:"",date:"",time:"",type:"meeting"});setModal(null);};
+  const addExp=()=>{if(!fExp.desc.trim()||!fExp.amount)return;setExps(p=>[...p,{id:Date.now(),desc:fExp.desc,descRu:fExp.desc,amount:+fExp.amount,date:today()}]);setFExp({desc:"",amount:""});setModal(null);};
+  const addCol=()=>{if(!fCol.name.trim()||!fCol.amount)return;setColls(p=>[...p,{id:Date.now(),name:fCol.name,nameRu:fCol.name,amount:+fCol.amount,payments:parents.map((pr,i)=>({id:i,p:pr.name,pRu:pr.nameRu,paid:false}))}]);setFCol({name:"",amount:""});setModal(null);};
+  const addPar=()=>{if(!fPar.name.trim())return;setParents(p=>[...p,{id:Date.now(),name:fPar.name,nameRu:fPar.name,child:fPar.child,childRu:fPar.child,phone:fPar.phone,role:fPar.role}]);setFPar({name:"",child:"",phone:"",role:"parent"});setModal(null);};
+  const addPoll=()=>{const opts=fPoll.opts.filter(o=>o.trim());if(!fPoll.q.trim()||opts.length<2)return;setPolls(p=>[...p,{id:Date.now(),q:fPoll.q,qRu:fPoll.q,opts,optsRu:opts,votes:opts.map(()=>0),voted:null,active:true}]);setFPoll({q:"",opts:["","","",""]});setModal(null);};
+  const addNeed=()=>{if(!fNeed.item.trim())return;setNeeds(p=>[...p,{id:Date.now(),item:fNeed.item,itemRu:fNeed.item,qty:fNeed.qty,desc:fNeed.desc,descRu:fNeed.desc,helpers:[],done:false}]);setFNeed({item:"",qty:"",desc:""});setModal(null);};
+  const addHelp=()=>{if(!fHelp.desc.trim())return;const nm=fHelp.anon?(ua?"Анонімно":"Анонимно"):fHelp.name||user.name;setHelpReqs(p=>[{id:Date.now(),type:fHelp.type,anon:fHelp.anon,name:nm,nameRu:nm,desc:fHelp.desc,descRu:fHelp.desc,contact:fHelp.contact,date:today(),helpers:0},...p]);setFHelp({type:"food",anon:false,name:"",desc:"",contact:""});setModal(null);};
+  const addTopSt=()=>{if(!fTopSt.name.trim()||!fTopSt.reason.trim())return;setTopSt(p=>[{id:Date.now(),name:fTopSt.name,nameRu:fTopSt.name,cat:fTopSt.cat,lvl:fTopSt.lvl,reason:fTopSt.reason,reasonRu:fTopSt.reason,date:today()},...p]);setFTopSt({name:"",cat:"grades",lvl:"gold",reason:""});setModal(null);};
+  const addTopPar=()=>{if(!fTopPar.name.trim()||!fTopPar.reason.trim())return;setTopPar(p=>[{id:Date.now(),name:fTopPar.name,nameRu:fTopPar.name,cat:fTopPar.cat,reason:fTopPar.reason,reasonRu:fTopPar.reason,date:today()},...p]);setFTopPar({name:"",cat:"vol",reason:""});setModal(null);};
+
+  const togglePay=(cId,pId)=>setColls(p=>p.map(c=>c.id!==cId?c:{...c,payments:c.payments.map(pm=>pm.id!==pId?pm:{...pm,paid:!pm.paid})}));
+  const joinVol=id=>setEvents(p=>p.map(e=>e.id!==id||e.vol.includes(user.name)?e:{...e,vol:[...e.vol,user.name]}));
+  const vote=(pid,idx)=>setPolls(p=>p.map(pl=>pl.id!==pid||pl.voted!==null?pl:{...pl,votes:pl.votes.map((v,i)=>i===idx?v+1:v),voted:idx}));
+  const helpNeed=id=>setNeeds(p=>p.map(n=>n.id!==id?n:{...n,helpers:n.helpers.includes(user.name)?n.helpers:[...n.helpers,user.name]}));
+  const helpReq=id=>setHelpReqs(p=>p.map(h=>h.id!==id?h:{...h,helpers:h.helpers+1}));
+
+  const handlePhoto=e=>{
+    const files=e.target.files;if(!files||!files.length)return;
+    Array.from(files).forEach(f=>{
+      const rd=new FileReader();
+      rd.onload=ev=>setPhotos(p=>[{id:Date.now()+Math.random(),src:ev.target.result,name:f.name,by:user.name,date:today()},...p]);
+      rd.readAsDataURL(f);
+    });
+    e.target.value="";
+  };
+
+  const upEv=events.filter(e=>e.date>=today());
+  const pastEv=events.filter(e=>e.date<today());
+  const filtPar=parents.filter(p=>{const q=psearch.toLowerCase();return(ua?p.name:p.nameRu).toLowerCase().includes(q)||(ua?p.child:p.childRu).toLowerCase().includes(q);});
+
+  const TABS=[
+    {id:"ann",icon:"📢",label:t.tabs.ann},
+    {id:"fin",icon:"💰",label:t.tabs.fin},
+    {id:"ev",icon:"📅",label:t.tabs.ev},
+    {id:"par",icon:"👥",label:t.tabs.par},
+    {id:"pol",icon:"🗳",label:t.tabs.pol},
+    {id:"doc",icon:"📄",label:t.tabs.doc},
+    {id:"photo",icon:"📸",label:t.tabs.photo},
+    {id:"needs",icon:"📋",label:t.tabs.needs},
+    {id:"help",icon:"🤝",label:t.tabs.help},
+    {id:"top",icon:"🏆",label:t.tabs.top},
+  ];
+
+  return(
+    <div className="min-h-screen bg-slate-100">
+      {/* HEADER */}
+      <header className="sticky top-0 z-30" style={{background:"linear-gradient(135deg,#6d28d9 0%,#4f46e5 60%,#2563eb 100%)"}}>
+        <div className="max-w-2xl mx-auto px-4 pt-4 pb-2">
+          <div className="flex items-center justify-between">
+            <div>
+              <h1 className="text-white text-base font-black leading-tight">{t.app}</h1>
+              <p className="text-violet-200 text-xs font-medium">{t.school}</p>
+            </div>
+            <div className="flex items-center gap-2">
+              <div className="flex gap-0.5 bg-white/10 rounded-xl p-1">
+                {["ua","ru"].map(l=><button key={l} onClick={()=>setLang(l)} className={`px-2.5 py-1 rounded-lg text-xs font-black transition-all ${lang===l?"bg-white text-violet-700 shadow":"text-white/70 hover:text-white"}`}>{l.toUpperCase()}</button>)}
+              </div>
+              <div className={`w-9 h-9 rounded-full flex items-center justify-center text-xs font-black shadow-lg ${AVT_CLR(user.name)}`}>{INI(user.name)}</div>
+            </div>
+          </div>
+          {upBday&&<div className="mt-2 bg-white/15 backdrop-blur rounded-xl px-3 py-2 flex items-center gap-2"><span className="text-base">🎂</span><span className="text-white/90 text-xs font-medium">{ua?upBday.n:upBday.nRu} — {upBday.days===0?t.ev.today:t.ev.inDays.replace("{n}",upBday.days)}</span></div>}
+        </div>
+        {/* TABS */}
+        <div className="bg-white border-b border-slate-200 mt-2">
+          <div className="max-w-2xl mx-auto flex overflow-x-auto noscroll">
+            {TABS.map(tb=>(
+              <button key={tb.id} onClick={()=>setTab(tb.id)} className={`flex-shrink-0 flex flex-col items-center px-3 py-2 border-b-2 transition-all ${tab===tb.id?"border-violet-600 text-violet-600":"border-transparent text-slate-400 hover:text-slate-600"}`}>
+                <span className="tab-icon">{tb.icon}</span>
+                <span className="text-[10px] font-bold mt-0.5 whitespace-nowrap">{tb.label}</span>
+              </button>
+            ))}
+          </div>
+        </div>
+      </header>
+
+      <main className="max-w-2xl mx-auto p-3 pb-10">
+
+      {/* ─── ОГОЛОШЕННЯ ─────────────────────────────────────────────── */}
+      {tab==="ann"&&(
+        <div>
+          <div className="flex justify-between items-center mb-3">
+            <h2 className="font-black text-slate-800 text-lg">{t.ann.title}</h2>
+            {canPost&&<Btn onClick={()=>setModal("ann")}>{t.ann.add}</Btn>}
+          </div>
+          {!canPost&&<div className="bg-amber-50 border border-amber-200 rounded-2xl p-3 mb-3 text-xs text-amber-700 font-medium">{t.ann.noAccess}</div>}
+          {ann.length===0&&<Empty text={t.ann.noItems}/>}
+          <div className="space-y-3">
+            {[...ann].sort((a,b)=>b.pinned-a.pinned).map(a=>(
+              <div key={a.id} className="card">
+                {a.pinned&&<div className="h-1 grad-violet"/>}
+                <div className="card-inner">
+                  {a.pinned&&<span className="text-xs font-bold text-violet-500 block mb-1">📌 {t.ann.pin}</span>}
+                  <div className="flex justify-between items-start gap-2">
+                    <h3 className="font-bold text-slate-900">{ua?a.title:a.titleRu}</h3>
+                    {canPost&&<div className="flex gap-1 flex-shrink-0">
+                      <button onClick={()=>setAnn(p=>p.map(x=>x.id===a.id?{...x,pinned:!x.pinned}:x))} className="w-7 h-7 flex items-center justify-center rounded-lg bg-slate-100 hover:bg-violet-100 text-slate-400 hover:text-violet-600 text-sm transition-colors">📌</button>
+                      <button onClick={()=>setAnn(p=>p.filter(x=>x.id!==a.id))} className="w-7 h-7 flex items-center justify-center rounded-lg bg-slate-100 hover:bg-red-100 text-slate-400 hover:text-red-500 text-sm transition-colors">✕</button>
+                    </div>}
+                  </div>
+                  <p className="text-slate-600 text-sm mt-1.5 leading-relaxed">{ua?a.text:a.textRu}</p>
+                  <div className="flex justify-between mt-3 pt-2.5 border-t border-slate-50 text-xs text-slate-400"><span>{a.author}</span><span>{a.date}</span></div>
+                </div>
+              </div>
+            ))}
+          </div>
+          <Modal show={modal==="ann"} onClose={()=>setModal(null)} title={t.ann.new}>
+            <div className="space-y-3">
+              <Fld label={t.ann.fTitle}><input className={INP} value={fAnn.title} onChange={e=>setFAnn(f=>({...f,title:e.target.value}))}/></Fld>
+              <Fld label={t.ann.fText}><textarea className={INP} rows={4} value={fAnn.text} onChange={e=>setFAnn(f=>({...f,text:e.target.value}))}/></Fld>
+              <div className="flex gap-2 pt-1"><Btn cls="flex-1 text-center" onClick={addAnn}>{t.ann.pub}</Btn><Btn v="sec" onClick={()=>setModal(null)}>{t.common.cancel}</Btn></div>
+            </div>
+          </Modal>
+        </div>
+      )}
+
+      {/* ─── ФІНАНСИ ─────────────────────────────────────────────────── */}
+      {tab==="fin"&&(
+        <div>
+          <h2 className="font-black text-slate-800 text-lg mb-3">{t.fin.title}</h2>
+          <div className="grid grid-cols-3 gap-2 mb-4">
+            {[[t.fin.coll,totColl,"grad-emerald"],[t.fin.spent,totExp,"grad-amber"],[t.fin.bal,totColl-totExp,"grad-violet"]].map(([lbl,val,gr])=>(
+              <div key={lbl} className={`${gr} rounded-2xl p-3 text-center shadow-lg`}>
+                <div className="text-white text-lg font-black">{val.toLocaleString()}</div>
+                <div className="text-white/70 text-xs mt-0.5">{lbl} {t.cur}</div>
+              </div>
+            ))}
+          </div>
+          <div className="flex bg-white rounded-2xl p-1 mb-4 shadow-sm">
+            {[[t.fin.tColl,"coll"],[t.fin.tExp,"exp"]].map(([lbl,k])=>(
+              <button key={k} onClick={()=>setFinTab(k)} className={`flex-1 py-2 rounded-xl text-sm font-bold transition-all ${finTab===k?"bg-gradient-to-r from-violet-600 to-indigo-600 text-white shadow":"text-slate-500"}`}>{lbl}</button>
+            ))}
+          </div>
+          {finTab==="coll"&&(
+            <div>
+              <div className="flex justify-end mb-2"><Btn v="ghost" onClick={()=>setModal("col")}>{t.fin.newColl}</Btn></div>
+              <div className="space-y-3">
+                {colls.map(col=>{
+                  const pd=col.payments.filter(p=>p.paid).length;const pct=col.payments.length?Math.round(pd/col.payments.length*100):0;
+                  return(
+                    <div key={col.id} className="card">
+                      <div className="h-1.5" style={{background:"linear-gradient(90deg,#10b981,#0891b2)"}}/>
+                      <div className="card-inner">
+                        <div className="flex justify-between mb-2">
+                          <span className="font-bold text-slate-800">{ua?col.name:col.nameRu}</span>
+                          <span className="font-black text-emerald-600">{col.amount} {t.cur}{t.fin.pp}</span>
+                        </div>
+                        <div className="flex items-center gap-2 mb-3">
+                          <div className="flex-1 bg-slate-100 rounded-full h-2"><div className="bg-gradient-to-r from-emerald-400 to-teal-500 h-2 rounded-full transition-all" style={{width:`${pct}%`}}/></div>
+                          <span className="text-xs font-bold text-slate-500">{pd}/{col.payments.length}</span>
+                        </div>
+                        <div className="divide-y divide-slate-50">
+                          {col.payments.map(p=>(
+                            <div key={p.id} className="flex items-center justify-between py-2">
+                              <span className="text-sm text-slate-700">{ua?p.p:p.pRu}</span>
+                              <button onClick={()=>togglePay(col.id,p.id)} className={`text-xs px-3 py-1 rounded-full font-bold transition-colors ${p.paid?"bg-emerald-100 text-emerald-700 hover:bg-emerald-200":"bg-slate-100 text-slate-500 hover:bg-slate-200"}`}>
+                                {p.paid?t.fin.paid:t.fin.notPaid}
+                              </button>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+          )}
+          {finTab==="exp"&&(
+            <div>
+              <div className="flex justify-end mb-2"><Btn v="ghost" onClick={()=>setModal("exp")}>{t.fin.addExp}</Btn></div>
+              <div className="card">
+                {exps.map((e,i)=>(
+                  <div key={e.id} className={`flex items-center justify-between p-4 ${i>0?"border-t border-slate-50":""}`}>
+                    <div><p className="font-semibold text-slate-800 text-sm">{ua?e.desc:e.descRu}</p><p className="text-xs text-slate-400">{e.date}</p></div>
+                    <span className="font-black text-red-500">−{e.amount.toLocaleString()} {t.cur}</span>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+          <Modal show={modal==="col"} onClose={()=>setModal(null)} title={t.fin.newColl}>
+            <div className="space-y-3"><Fld label={t.fin.colName}><input className={INP} value={fCol.name} onChange={e=>setFCol(f=>({...f,name:e.target.value}))}/></Fld><Fld label={t.fin.colAmt}><input className={INP} type="number" value={fCol.amount} onChange={e=>setFCol(f=>({...f,amount:e.target.value}))}/></Fld><div className="flex gap-2 pt-1"><Btn cls="flex-1 text-center" onClick={addCol}>{t.fin.create}</Btn><Btn v="sec" onClick={()=>setModal(null)}>{t.common.cancel}</Btn></div></div>
+          </Modal>
+          <Modal show={modal==="exp"} onClose={()=>setModal(null)} title={t.fin.addExp}>
+            <div className="space-y-3"><Fld label={t.fin.expDesc}><input className={INP} value={fExp.desc} onChange={e=>setFExp(f=>({...f,desc:e.target.value}))}/></Fld><Fld label={t.fin.expAmt}><input className={INP} type="number" value={fExp.amount} onChange={e=>setFExp(f=>({...f,amount:e.target.value}))}/></Fld><div className="flex gap-2 pt-1"><Btn cls="flex-1 text-center" onClick={addExp}>{t.common.add}</Btn><Btn v="sec" onClick={()=>setModal(null)}>{t.common.cancel}</Btn></div></div>
+          </Modal>
+        </div>
+      )}
+
+      {/* ─── ПОДІЇ ─────────────────────────────────────────────────── */}
+      {tab==="ev"&&(
+        <div>
+          <div className="flex justify-between items-center mb-3"><h2 className="font-black text-slate-800 text-lg">{t.ev.title}</h2><Btn onClick={()=>setModal("ev")}>{t.ev.add}</Btn></div>
+          {upEv.length>0&&<><SL>{t.ev.up}</SL><div className="space-y-3 mb-2">{upEv.map(ev=>{const s=EVT_S[ev.type]||EVT_S.other;const joined=ev.vol.includes(user.name);return(<div key={ev.id} className="card"><div className={`h-1.5 ${s.dot}`}/><div className="card-inner"><div className="flex items-start gap-3"><div className={`w-2.5 h-2.5 rounded-full mt-1 flex-shrink-0 ${s.dot}`}/><div className="flex-1"><h3 className="font-bold text-slate-900">{ua?ev.title:ev.titleRu}</h3><p className="text-xs text-slate-500 mt-0.5">{ev.date}{ev.time?` · ${ev.time}`:""}</p><span className={`inline-block mt-1.5 text-xs font-bold px-2.5 py-1 rounded-full ${s.bg} ${s.text}`}>{t.ev.types[ev.type]}</span></div></div>{ev.type!=="birthday"&&<div className="mt-3 pt-3 border-t border-slate-50 flex items-center justify-between"><p className="text-xs text-slate-400">{t.ev.vol}: {ev.vol.length>0?ev.vol.join(", "):t.ev.noVol}</p><button onClick={()=>joinVol(ev.id)} disabled={joined} className={`text-xs font-bold px-3 py-1.5 rounded-xl transition-all ${joined?"bg-emerald-100 text-emerald-700":"bg-violet-100 text-violet-700 hover:bg-violet-200"}`}>{joined?t.ev.joined:t.ev.join}</button></div>}</div></div>);})}</div></>}
+          {pastEv.length>0&&<><SL>{t.ev.past}</SL><div className="space-y-2 mb-2">{pastEv.map(ev=>{const s=EVT_S[ev.type]||EVT_S.other;return(<div key={ev.id} className="card opacity-60"><div className="card-inner flex items-center gap-3 py-3"><div className={`w-2 h-2 rounded-full flex-shrink-0 ${s.dot}`}/><div className="flex-1"><p className="text-sm font-semibold text-slate-700">{ua?ev.title:ev.titleRu}</p><p className="text-xs text-slate-400">{ev.date}</p></div><span className={`text-xs font-bold px-2 py-0.5 rounded-full ${s.bg} ${s.text}`}>{t.ev.types[ev.type]}</span></div></div>);})}</div></>}
+          <SL>{t.ev.bdays}</SL>
+          <div className="card"><div className="card-inner p-0">{BDAYS.map((b,i)=>{const d=daysUntil(b.d);return(<div key={i} className={`flex items-center justify-between p-4 ${i>0?"border-t border-slate-50":""}`}><div><p className="font-semibold text-slate-800 text-sm">{ua?b.n:b.nRu}</p><p className="text-xs text-slate-400">{b.d}</p></div><span className={`text-xs font-bold px-3 py-1 rounded-full ${d===0?"bg-rose-100 text-rose-600":d<=7?"bg-amber-100 text-amber-700":"bg-slate-100 text-slate-500"}`}>{d===0?t.ev.today:d>0?t.ev.inDays.replace("{n}",d):t.ev.passed}</span></div>);})}</div></div>
+          <Modal show={modal==="ev"} onClose={()=>setModal(null)} title={t.ev.newEv}>
+            <div className="space-y-3"><Fld label={ua?"Назва":"Название"}><input className={INP} value={fEv.title} onChange={e=>setFEv(f=>({...f,title:e.target.value}))}/></Fld><div className="grid grid-cols-2 gap-2"><Fld label="Дата"><input className={INP} type="date" value={fEv.date} onChange={e=>setFEv(f=>({...f,date:e.target.value}))}/></Fld><Fld label="Час"><input className={INP} type="time" value={fEv.time} onChange={e=>setFEv(f=>({...f,time:e.target.value}))}/></Fld></div><Fld label="Тип"><select className={INP} value={fEv.type} onChange={e=>setFEv(f=>({...f,type:e.target.value}))}>{Object.entries(t.ev.types).map(([k,v])=><option key={k} value={k}>{v}</option>)}</select></Fld><div className="flex gap-2 pt-1"><Btn cls="flex-1 text-center" onClick={addEv}>{t.common.add}</Btn><Btn v="sec" onClick={()=>setModal(null)}>{t.common.cancel}</Btn></div></div>
+          </Modal>
+        </div>
+      )}
+
+      {/* ─── БАТЬКИ ─────────────────────────────────────────────────── */}
+      {tab==="par"&&(
+        <div>
+          <div className="flex justify-between items-center mb-3"><h2 className="font-black text-slate-800 text-lg">{t.par.title} ({parents.length})</h2><Btn onClick={()=>setModal("par")}>{t.par.add}</Btn></div>
+          <input className={`${INP} mb-3`} placeholder={t.par.search} value={psearch} onChange={e=>setPsearch(e.target.value)}/>
+          {filtPar.filter(p=>p.role!=="parent").length>0&&<><SL>{t.par.comm}</SL><div className="space-y-2 mb-2">{filtPar.filter(p=>p.role!=="parent").map(p=><div key={p.id} className="card"><div className="h-1 grad-violet"/><div className="card-inner flex items-center gap-3"><Av name={ua?p.name:p.nameRu} sz="md"/><div className="flex-1"><p className="font-bold text-slate-900 text-sm">{ua?p.name:p.nameRu}</p><p className="text-xs text-slate-500">{ua?p.child:p.childRu} · {p.phone}</p></div><span className="text-xs font-bold px-2.5 py-1 rounded-full bg-violet-100 text-violet-700">{t.roles[p.role]}</span></div></div>)}</div></>}
+          <SL>{t.par.all}</SL>
+          <div className="space-y-2">{filtPar.filter(p=>p.role==="parent").map(p=><div key={p.id} className="card"><div className="card-inner flex items-center gap-3 py-3"><Av name={ua?p.name:p.nameRu} sz="sm"/><div><p className="font-semibold text-slate-800 text-sm">{ua?p.name:p.nameRu}</p><p className="text-xs text-slate-500">{ua?p.child:p.childRu} · {p.phone}</p></div></div></div>)}</div>
+          <Modal show={modal==="par"} onClose={()=>setModal(null)} title={t.par.add}>
+            <div className="space-y-3"><Fld label={t.par.pName}><input className={INP} value={fPar.name} onChange={e=>setFPar(f=>({...f,name:e.target.value}))}/></Fld><Fld label={t.par.cName}><input className={INP} value={fPar.child} onChange={e=>setFPar(f=>({...f,child:e.target.value}))}/></Fld><Fld label={t.par.phone}><input className={INP} value={fPar.phone} onChange={e=>setFPar(f=>({...f,phone:e.target.value}))}/></Fld><Fld label={t.par.role}><select className={INP} value={fPar.role} onChange={e=>setFPar(f=>({...f,role:e.target.value}))}>{Object.entries(t.roles).map(([k,v])=><option key={k} value={k}>{v}</option>)}</select></Fld><div className="flex gap-2 pt-1"><Btn cls="flex-1 text-center" onClick={addPar}>{t.common.add}</Btn><Btn v="sec" onClick={()=>setModal(null)}>{t.common.cancel}</Btn></div></div>
+          </Modal>
+        </div>
+      )}
+
+      {/* ─── ОПИТУВАННЯ ──────────────────────────────────────────────── */}
+      {tab==="pol"&&(
+        <div>
+          <div className="flex justify-between items-center mb-3"><h2 className="font-black text-slate-800 text-lg">{t.pol.title}</h2><Btn onClick={()=>setModal("poll")}>{t.pol.create}</Btn></div>
+          <div className="space-y-4">
+            {polls.map(poll=>{
+              const total=poll.votes.reduce((a,b)=>a+b,0);const maxV=Math.max(...poll.votes);
+              const opts=ua?poll.opts:poll.optsRu;
+              return(
+                <div key={poll.id} className="card">
+                  <div className="h-1.5 grad-sky"/>
+                  <div className="card-inner">
+                    <div className="flex items-start justify-between gap-2 mb-4">
+                      <h3 className="font-bold text-slate-900 flex-1">{ua?poll.q:poll.qRu}</h3>
+                      <span className={`text-xs font-bold px-2.5 py-1 rounded-full ${poll.active?"bg-emerald-100 text-emerald-700":"bg-slate-100 text-slate-500"}`}>{poll.active?t.pol.active:t.pol.closed}</span>
+                    </div>
+                    <div className="space-y-3">
+                      {opts.map((opt,idx)=>{
+                        const pct=total>0?Math.round(poll.votes[idx]/total*100):0;
+                        const isW=poll.votes[idx]===maxV&&total>0&&poll.voted!==null;
+                        const isMe=poll.voted===idx;
+                        return(
+                          <button key={idx} onClick={()=>vote(poll.id,idx)} disabled={poll.voted!==null||!poll.active} className="w-full text-left">
+                            <div className="flex justify-between mb-1"><span className={`text-sm font-semibold ${isMe?"text-violet-600":isW?"text-emerald-600":"text-slate-700"}`}>{opt}</span><span className="text-xs text-slate-400 ml-2">{poll.votes[idx]} ({pct}%)</span></div>
+                            <div className="w-full bg-slate-100 rounded-full h-2 overflow-hidden"><div className={`h-2 rounded-full transition-all duration-500 ${isMe?"bg-gradient-to-r from-violet-500 to-indigo-500":isW?"bg-gradient-to-r from-emerald-400 to-teal-500":"bg-slate-300"}`} style={{width:`${pct}%`}}/></div>
+                          </button>
+                        );
+                      })}
+                    </div>
+                    <div className="flex justify-between items-center mt-4 pt-3 border-t border-slate-50 text-xs text-slate-400">
+                      <span>{t.pol.total}: {total}</span>
+                      {poll.voted===null&&poll.active?<span className="text-violet-500 font-semibold">{t.pol.hint}</span>:<span className="text-emerald-600 font-semibold">{t.pol.voted}</span>}
+                    </div>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+          <Modal show={modal==="poll"} onClose={()=>setModal(null)} title={t.pol.create}>
+            <div className="space-y-3"><Fld label={t.pol.q}><input className={INP} value={fPoll.q} onChange={e=>setFPoll(f=>({...f,q:e.target.value}))}/></Fld>{fPoll.opts.map((o,i)=><Fld key={i} label={`Варіант ${i+1}${i<2?" *":""}`}><input className={INP} value={o} onChange={e=>{const a=[...fPoll.opts];a[i]=e.target.value;setFPoll(f=>({...f,opts:a}));}} /></Fld>)}<div className="flex gap-2 pt-1"><Btn cls="flex-1 text-center" onClick={addPoll}>{t.pol.create}</Btn><Btn v="sec" onClick={()=>setModal(null)}>{t.common.cancel}</Btn></div></div>
+          </Modal>
+        </div>
+      )}
+
+      {/* ─── ДОКУМЕНТИ ───────────────────────────────────────────────── */}
+      {tab==="doc"&&(
+        <div>
+          <h2 className="font-black text-slate-800 text-lg mb-3">{t.doc.title}</h2>
+          <div className="card mb-4">
+            {DOCS_DATA.map((doc,i)=>(
+              <div key={doc.id} className={i>0?"border-t border-slate-100":""}>
+                <button onClick={()=>setDocOpen(p=>({...p,[doc.id]:!p[doc.id]}))} className="w-full flex items-center gap-3 p-4 hover:bg-slate-50 transition-colors text-left">
+                  <span className="text-xl w-8 text-center flex-shrink-0">{doc.icon}</span>
+                  <div className="flex-1 min-w-0"><p className="font-semibold text-slate-800 text-sm">{ua?doc.name:doc.nameRu}</p><p className="text-xs text-slate-400">{doc.date}</p></div>
+                  <span className={`text-slate-400 text-sm flex-shrink-0 chevron ${docOpen[doc.id]?"open":""}`}>▼</span>
+                </button>
+                {docOpen[doc.id]&&<div className="px-4 pb-4 border-t border-slate-100 bg-slate-50"><pre className="pre text-xs text-slate-700 leading-relaxed pt-3 overflow-x-auto">{ua?doc.content:doc.contentRu}</pre></div>}
+              </div>
+            ))}
+          </div>
+          <SL>{t.doc.teach}</SL>
+          <div className="card mb-4">{TEACHERS.map((tc,i)=><div key={i} className={`flex items-center gap-3 p-4 ${i>0?"border-t border-slate-50":""}`}><Av name={ua?tc.n:tc.nRu} sz="sm"/><div><p className="font-semibold text-slate-800 text-sm">{ua?tc.n:tc.nRu}</p><p className="text-xs text-slate-500">{ua?tc.s:tc.sRu}</p><p className="text-xs text-slate-400">{tc.p}</p></div></div>)}</div>
+          <SL>{t.doc.sched}</SL>
+          <div className="card">{SCHEDULE.map((d,i)=><div key={i} className={`flex items-start gap-3 p-3 ${i%2===0?"bg-violet-50/50":""} ${i>0?"border-t border-slate-100":""}`}><span className="text-xs font-black text-violet-600 w-5 mt-1 flex-shrink-0">{d.d}</span><div className="flex flex-wrap gap-1">{d.l.map((l,j)=><span key={j} className="text-xs bg-white border border-slate-200 text-slate-700 px-2 py-1 rounded-lg shadow-sm">{j+1}. {l}</span>)}</div></div>)}</div>
+        </div>
+      )}
+
+      {/* ─── ФОТОАЛЬБОМ ──────────────────────────────────────────────── */}
+      {tab==="photo"&&(
+        <div>
+          <div className="flex justify-between items-center mb-3">
+            <h2 className="font-black text-slate-800 text-lg">{t.photo.title}</h2>
+            <button onClick={()=>fileRef.current&&fileRef.current.click()} className="flex items-center gap-1.5 bg-gradient-to-r from-pink-500 to-rose-500 text-white px-4 py-2 rounded-xl text-sm font-bold shadow-md shadow-pink-200 hover:from-pink-600 hover:to-rose-600 transition-all">
+              <span>📎</span> {t.photo.add}
+            </button>
+            <input ref={fileRef} type="file" accept="image/*" multiple className="hidden" onChange={handlePhoto}/>
+          </div>
+          {photos.length===0&&<Empty text={t.photo.noItems}/>}
+          <div className="photo-grid">
+            {photos.map(ph=>(
+              <button key={ph.id} onClick={()=>setPhotoModal(ph)} className="aspect-square rounded-2xl overflow-hidden shadow-md hover:scale-105 transition-transform">
+                <img src={ph.src} alt="" className="w-full h-full object-cover"/>
+              </button>
+            ))}
+          </div>
+          {/* Photo viewer modal */}
+          {photoModal&&(
+            <div className="fixed inset-0 bg-black/90 flex flex-col items-center justify-center z-50 p-4" onClick={()=>setPhotoModal(null)}>
+              <img src={photoModal.src} alt="" className="max-w-full max-h-[80vh] rounded-2xl shadow-2xl object-contain"/>
+              <div className="mt-3 text-white/70 text-sm text-center">
+                <span>{t.photo.by}: {photoModal.by}</span>
+                <span className="mx-2">·</span>
+                <span>{photoModal.date}</span>
+              </div>
+              <button className="mt-4 text-white/60 hover:text-white text-sm" onClick={()=>setPhotoModal(null)}>{t.common.close} ✕</button>
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* ─── ПОТРЕБИ ─────────────────────────────────────────────────── */}
+      {tab==="needs"&&(
+        <div>
+          <div className="flex justify-between items-center mb-3">
+            <h2 className="font-black text-slate-800 text-lg">{t.needs.title}</h2>
+            {canMgr?<Btn onClick={()=>setModal("need")}>{t.needs.add}</Btn>:<span className="text-xs text-amber-600 bg-amber-50 px-3 py-1.5 rounded-xl font-medium">🔒</span>}
+          </div>
+          {!canMgr&&<div className="bg-amber-50 border border-amber-200 rounded-2xl p-3 mb-3 text-xs text-amber-700 font-medium">{t.needs.noAccess}</div>}
+          {needs.length===0&&<Empty text={t.needs.noItems}/>}
+          <div className="space-y-3">
+            {needs.map(n=>{
+              const iHelp=n.helpers.includes(user.name);
+              return(
+                <div key={n.id} className="card">
+                  <div className={`h-1 ${n.done?"bg-emerald-400":"bg-orange-400"}`}/>
+                  <div className="card-inner">
+                    <div className="flex items-start justify-between gap-2">
+                      <div className="flex-1">
+                        <h3 className="font-bold text-slate-900">{ua?n.item:n.itemRu}</h3>
+                        {n.qty&&<p className="text-xs text-slate-500 mt-0.5">📦 {n.qty}</p>}
+                        {(ua?n.desc:n.descRu)&&<p className="text-sm text-slate-600 mt-1">{ua?n.desc:n.descRu}</p>}
+                      </div>
+                      <span className={`text-xs font-bold px-2.5 py-1 rounded-full flex-shrink-0 ${n.done?"bg-emerald-100 text-emerald-700":"bg-orange-100 text-orange-700"}`}>{n.done?t.needs.done:t.needs.needed}</span>
+                    </div>
+                    <div className="mt-3 pt-3 border-t border-slate-50 flex items-center justify-between">
+                      <span className="text-xs text-slate-400">{n.helpers.length>0?n.helpers.join(", "):""}</span>
+                      <div className="flex gap-2">
+                        {canMgr&&<button onClick={()=>setNeeds(p=>p.map(x=>x.id===n.id?{...x,done:!x.done}:x))} className="text-xs font-bold px-2.5 py-1 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-600 transition-colors">✓</button>}
+                        <button onClick={()=>helpNeed(n.id)} disabled={iHelp||n.done} className={`text-xs font-bold px-3 py-1.5 rounded-xl transition-all ${iHelp?"bg-emerald-100 text-emerald-700":"bg-orange-100 text-orange-700 hover:bg-orange-200"}`}>
+                          {iHelp?t.needs.helped:t.needs.canHelp}
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+          <Modal show={modal==="need"} onClose={()=>setModal(null)} title={t.needs.newItem}>
+            <div className="space-y-3">
+              <Fld label={t.needs.item}><input className={INP} value={fNeed.item} onChange={e=>setFNeed(f=>({...f,item:e.target.value}))}/></Fld>
+              <Fld label={t.needs.qty}><input className={INP} value={fNeed.qty} onChange={e=>setFNeed(f=>({...f,qty:e.target.value}))}/></Fld>
+              <Fld label={t.needs.desc}><input className={INP} value={fNeed.desc} onChange={e=>setFNeed(f=>({...f,desc:e.target.value}))}/></Fld>
+              <div className="flex gap-2 pt-1"><Btn cls="flex-1 text-center" onClick={addNeed}>{t.common.add}</Btn><Btn v="sec" onClick={()=>setModal(null)}>{t.common.cancel}</Btn></div>
+            </div>
+          </Modal>
+        </div>
+      )}
+
+      {/* ─── ДОПОМОГА ─────────────────────────────────────────────────── */}
+      {tab==="help"&&(
+        <div>
+          <div className="rounded-3xl mb-4 p-4 text-white" style={{background:"linear-gradient(135deg,#e11d48,#9333ea)"}}>
+            <h2 className="font-black text-lg">{t.help.title}</h2>
+            <p className="text-white/80 text-sm mt-1">{t.help.sub}</p>
+            <button onClick={()=>setModal("help")} className="mt-3 bg-white/20 hover:bg-white/30 text-white font-bold px-4 py-2 rounded-xl text-sm transition-colors border border-white/30">
+              + {t.help.add}
+            </button>
+          </div>
+          {helpReqs.length===0&&<Empty text={t.help.noItems}/>}
+          <div className="space-y-3">
+            {helpReqs.map(h=>(
+              <div key={h.id} className="card">
+                <div className="h-1.5 grad-rose"/>
+                <div className="card-inner">
+                  <div className="flex items-start justify-between gap-2 mb-2">
+                    <div>
+                      <span className={`text-xs font-bold px-2.5 py-1 rounded-full ${HELP_COLORS[h.type]||HELP_COLORS.other}`}>{t.help.types[h.type]}</span>
+                      <p className="font-bold text-slate-800 mt-2">{h.anon?(ua?"Анонімно":"Анонимно"):ua?h.name:h.nameRu}</p>
+                    </div>
+                    <span className="text-xs text-slate-400 flex-shrink-0">{h.date}</span>
+                  </div>
+                  <p className="text-slate-600 text-sm leading-relaxed">{ua?h.desc:h.descRu}</p>
+                  {h.contact&&<p className="text-xs text-slate-400 mt-1.5">📞 {h.contact}</p>}
+                  <div className="mt-3 pt-3 border-t border-slate-50 flex items-center justify-between">
+                    <span className="text-xs text-slate-400">{h.helpers} {t.help.helped}</span>
+                    <button onClick={()=>helpReq(h.id)} className="text-xs font-bold px-3 py-1.5 rounded-xl bg-rose-50 text-rose-600 hover:bg-rose-100 transition-colors">{t.help.canHelp}</button>
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+          <Modal show={modal==="help"} onClose={()=>setModal(null)} title={t.help.newReq}>
+            <div className="space-y-3">
+              <Fld label={t.help.typeL}><select className={INP} value={fHelp.type} onChange={e=>setFHelp(f=>({...f,type:e.target.value}))}>{Object.entries(t.help.types).map(([k,v])=><option key={k} value={k}>{v}</option>)}</select></Fld>
+              <Fld label={t.help.desc}><textarea className={INP} rows={3} value={fHelp.desc} onChange={e=>setFHelp(f=>({...f,desc:e.target.value}))}/></Fld>
+              <div className="flex items-center gap-3 py-1">
+                <input type="checkbox" id="anon" checked={fHelp.anon} onChange={e=>setFHelp(f=>({...f,anon:e.target.checked}))} className="w-4 h-4 accent-rose-500 cursor-pointer"/>
+                <label htmlFor="anon" className="text-sm text-slate-700 font-medium cursor-pointer">{t.help.anon}</label>
+              </div>
+              {!fHelp.anon&&<Fld label={t.help.contact}><input className={INP} placeholder="+380..." value={fHelp.contact} onChange={e=>setFHelp(f=>({...f,contact:e.target.value}))}/></Fld>}
+              <div className="flex gap-2 pt-1"><Btn cls="flex-1 text-center" onClick={addHelp}>{t.common.add}</Btn><Btn v="sec" onClick={()=>setModal(null)}>{t.common.cancel}</Btn></div>
+            </div>
+          </Modal>
+        </div>
+      )}
+
+      {/* ─── ТОП ─────────────────────────────────────────────────────── */}
+      {tab==="top"&&(
+        <div>
+          <div className="rounded-3xl mb-4 p-4 text-white" style={{background:"linear-gradient(135deg,#d97706,#dc2626)"}}>
+            <h2 className="font-black text-xl">🏆 {t.top.title}</h2>
+          </div>
+          <div className="flex bg-white rounded-2xl p-1 mb-4 shadow-sm">
+            {[["students",t.top.students,"🎓"],["parents",t.top.parents,"👨‍👩‍👧"]].map(([k,lbl,ico])=>(
+              <button key={k} onClick={()=>setTopTab(k)} className={`flex-1 py-2 rounded-xl text-sm font-bold transition-all flex items-center justify-center gap-1.5 ${topTab===k?"bg-gradient-to-r from-amber-500 to-orange-500 text-white shadow":"text-slate-500"}`}>{ico} {lbl}</button>
+            ))}
+          </div>
+          {topTab==="students"&&(
+            <div>
+              {canMgr&&<div className="flex justify-end mb-3"><Btn onClick={()=>setModal("topSt")}>{t.top.addSt}</Btn></div>}
+              {!canMgr&&<div className="bg-amber-50 border border-amber-200 rounded-2xl p-3 mb-3 text-xs text-amber-700 font-medium">{t.top.noAccess}</div>}
+              {topSt.length===0&&<Empty text={t.top.noSt}/>}
+              <div className="space-y-3">
+                {topSt.map((s,i)=>(
+                  <div key={s.id} className="card">
+                    <div className={`h-1.5 ${s.lvl==="gold"?"bg-amber-400":s.lvl==="silver"?"bg-slate-400":"bg-amber-600"}`}/>
+                    <div className="card-inner flex items-start gap-3">
+                      <div className="w-10 h-10 rounded-full bg-gradient-to-br from-amber-200 to-orange-300 flex items-center justify-center text-lg flex-shrink-0 font-black text-amber-800">{i+1}</div>
+                      <div className="flex-1">
+                        <div className="flex items-center gap-2 flex-wrap">
+                          <h3 className="font-black text-slate-900">{ua?s.name:s.nameRu}</h3>
+                          <span className={`badge ${TOP_LEVEL_STYLE[s.lvl]}`}>{t.top.levels[s.lvl]}</span>
+                        </div>
+                        <p className="text-xs font-bold text-amber-600 mt-0.5">{t.top.sCats[s.cat]}</p>
+                        <p className="text-sm text-slate-600 mt-1">{ua?s.reason:s.reasonRu}</p>
+                        <p className="text-xs text-slate-400 mt-1">{s.date}</p>
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+          {topTab==="parents"&&(
+            <div>
+              {canMgr&&<div className="flex justify-end mb-3"><Btn onClick={()=>setModal("topPar")}>{t.top.addPar}</Btn></div>}
+              {!canMgr&&<div className="bg-amber-50 border border-amber-200 rounded-2xl p-3 mb-3 text-xs text-amber-700 font-medium">{t.top.noAccess}</div>}
+              {topPar.length===0&&<Empty text={t.top.noPar}/>}
+              <div className="space-y-3">
+                {topPar.map((p,i)=>(
+                  <div key={p.id} className="card">
+                    <div className="h-1.5 bg-gradient-to-r from-violet-400 to-indigo-400"/>
+                    <div className="card-inner flex items-start gap-3">
+                      <div className="w-10 h-10 rounded-full bg-gradient-to-br from-violet-200 to-indigo-300 flex items-center justify-center text-lg flex-shrink-0 font-black text-violet-800">{i+1}</div>
+                      <div className="flex-1">
+                        <div className="flex items-center gap-2">
+                          <h3 className="font-black text-slate-900">{ua?p.name:p.nameRu}</h3>
+                        </div>
+                        <p className="text-xs font-bold text-violet-600 mt-0.5">{t.top.pCats[p.cat]}</p>
+                        <p className="text-sm text-slate-600 mt-1">{ua?p.reason:p.reasonRu}</p>
+                        <p className="text-xs text-slate-400 mt-1">{p.date}</p>
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+          <Modal show={modal==="topSt"} onClose={()=>setModal(null)} title={t.top.addSt}>
+            <div className="space-y-3">
+              <Fld label={t.top.sName}><input className={INP} value={fTopSt.name} onChange={e=>setFTopSt(f=>({...f,name:e.target.value}))}/></Fld>
+              <Fld label={t.top.cat}><select className={INP} value={fTopSt.cat} onChange={e=>setFTopSt(f=>({...f,cat:e.target.value}))}>{Object.entries(t.top.sCats).map(([k,v])=><option key={k} value={k}>{v}</option>)}</select></Fld>
+              <Fld label={t.top.lvl}><select className={INP} value={fTopSt.lvl} onChange={e=>setFTopSt(f=>({...f,lvl:e.target.value}))}>{Object.entries(t.top.levels).map(([k,v])=><option key={k} value={k}>{v}</option>)}</select></Fld>
+              <Fld label={t.top.reason}><input className={INP} value={fTopSt.reason} onChange={e=>setFTopSt(f=>({...f,reason:e.target.value}))}/></Fld>
+              <div className="flex gap-2 pt-1"><Btn cls="flex-1 text-center" onClick={addTopSt}>{t.common.add}</Btn><Btn v="sec" onClick={()=>setModal(null)}>{t.common.cancel}</Btn></div>
+            </div>
+          </Modal>
+          <Modal show={modal==="topPar"} onClose={()=>setModal(null)} title={t.top.addPar}>
+            <div className="space-y-3">
+              <Fld label={t.top.pName}><input className={INP} value={fTopPar.name} onChange={e=>setFTopPar(f=>({...f,name:e.target.value}))}/></Fld>
+              <Fld label={t.top.cat}><select className={INP} value={fTopPar.cat} onChange={e=>setFTopPar(f=>({...f,cat:e.target.value}))}>{Object.entries(t.top.pCats).map(([k,v])=><option key={k} value={k}>{v}</option>)}</select></Fld>
+              <Fld label={t.top.reason}><input className={INP} value={fTopPar.reason} onChange={e=>setFTopPar(f=>({...f,reason:e.target.value}))}/></Fld>
+              <div className="flex gap-2 pt-1"><Btn cls="flex-1 text-center" onClick={addTopPar}>{t.common.add}</Btn><Btn v="sec" onClick={()=>setModal(null)}>{t.common.cancel}</Btn></div>
+            </div>
+          </Modal>
+        </div>
+      )}
+
+      </main>
+    </div>
+  );
+}
+
+try{
+  ReactDOM.createRoot(document.getElementById("root")).render(<App/>);
+}catch(e){
+  document.getElementById("root").innerHTML='<div style="padding:20px;background:#fee2e2;border:2px solid #ef4444;border-radius:12px;margin:20px;font-family:monospace;font-size:13px;color:#991b1b"><b>React error:</b><br>'+e.message+'</div>';
+}
+</script>
+</body>
+</html>
