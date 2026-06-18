@@ -8,6 +8,8 @@
 <script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
 <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
 <script src="https://unpkg.com/@babel/standalone@7.9.0/babel.min.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
 <style>
 *{box-sizing:border-box}
 body{margin:0;background:#f1f5f9;-webkit-tap-highlight-color:transparent;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',system-ui,sans-serif}
@@ -40,11 +42,98 @@ window.onerror=function(msg,src,line){
   if(el) el.innerHTML='<div style="padding:20px;background:#fee2e2;border:2px solid #ef4444;border-radius:12px;margin:20px;font-family:monospace;font-size:13px;color:#991b1b"><b>Помилка завантаження:</b><br>'+msg+'<br><small>рядок '+line+'</small></div>';
 };
 </script>
+<!-- ═══════════════════════════════════════════════════════════════════
+     ⚙️  НАЛАШТУВАННЯ — заповніть перед завантаженням на GitHub
+     ═══════════════════════════════════════════════════════════════════
+     1. Telegram Bot token — отримайте у @BotFather
+     2. Ваш особистий chat_id — дізнайтесь у @userinfobot
+     3. Firebase — створіть безкоштовний проект на firebase.google.com,
+        перейдіть Realtime Database → Rules, встановіть:
+        { "rules": { ".read": true, ".write": true } }
+     ═══════════════════════════════════════════════════════════════════ -->
+<script>
+window.TG_BOT_TOKEN   = "YOUR_BOT_TOKEN";    // 🔑 токен бота
+window.TG_ADMIN_CHAT  = "YOUR_CHAT_ID";       // 📩 ваш особистий chat_id
+
+const FIREBASE_CONFIG = {
+  apiKey:            "YOUR_API_KEY",
+  authDomain:        "YOUR_PROJECT.firebaseapp.com",
+  databaseURL:       "https://YOUR_PROJECT-default-rtdb.firebaseio.com",
+  projectId:         "YOUR_PROJECT",
+  storageBucket:     "YOUR_PROJECT.appspot.com",
+  messagingSenderId: "YOUR_SENDER_ID",
+  appId:             "YOUR_APP_ID"
+};
+try {
+  firebase.initializeApp(FIREBASE_CONFIG);
+  window._db = firebase.database();
+} catch(e) {
+  window._db = null;
+  console.warn("Firebase не налаштовано:", e.message);
+}
+</script>
+
 <script type="text/babel">
 /* @jsxRuntime classic */
 const { useState, useEffect, useRef } = React;
 
 const ROLE_PASSWORDS = { teacher:"vchytel101", admin:"admin101", chairman:"golova101" };
+
+// ── FIREBASE SHARED STATE HOOK ────────────────────────────────────────────────
+// useFBState(path) — повністю замінює useState([]) для спільних даних.
+// Будь-яка зміна одразу синхронізується з Firebase і видна ВСІМ користувачам.
+const DB_ROOT = "klas1b";
+function useFBState(path, init=[]) {
+  const [val, setValLocal] = useState(init);
+  useEffect(() => {
+    const db = window._db;
+    if (!db) return;
+    const ref = db.ref(DB_ROOT + "/" + path);
+    ref.on('value', snap => {
+      const v = snap.val();
+      setValLocal(v && typeof v === 'object' ? Object.values(v).filter(Boolean) : []);
+    });
+    return () => ref.off('value');
+  }, []);
+  function setVal(updater) {
+    setValLocal(prev => {
+      const next = typeof updater === 'function' ? updater(prev) : updater;
+      const db = window._db;
+      if (db) {
+        const ref = db.ref(DB_ROOT + "/" + path);
+        if (!next || next.length === 0) {
+          ref.set(null).catch(()=>{});
+        } else {
+          const obj = {};
+          next.forEach(item => { if (item && item.id !== undefined) obj[String(item.id)] = item; });
+          ref.set(obj).catch(()=>{});
+        }
+      }
+      return next;
+    });
+  }
+  return [val, setVal];
+}
+
+// ── TELEGRAM NOTIFICATION ─────────────────────────────────────────────────────
+const sendTgMsg = (text) => {
+  const token = window.TG_BOT_TOKEN; const chat = window.TG_ADMIN_CHAT;
+  if (!token || token.startsWith("YOUR_") || !chat || chat.startsWith("YOUR_")) return;
+  fetch(`https://api.telegram.org/bot${token}/sendMessage`, {
+    method:'POST', headers:{'Content-Type':'application/json'},
+    body: JSON.stringify({chat_id: chat, text, parse_mode:'HTML'})
+  }).catch(()=>{});
+};
+
+// ── BROWSER PUSH NOTIFICATIONS ────────────────────────────────────────────────
+const requestNotifPerm = () => {
+  if ('Notification' in window && Notification.permission === 'default')
+    Notification.requestPermission().catch(()=>{});
+};
+const pushNotif = (title, body) => {
+  if ('Notification' in window && Notification.permission === 'granted')
+    try { new Notification(title, {body}); } catch(e) {}
+};
 
 // ── TRANSLATIONS ──────────────────────────────────────────────────────────────
 const L = {
@@ -55,6 +144,7 @@ ua:{
   reg:{
     welcome:"Ласкаво просимо",sub:"Зареєструйтесь для доступу",
     name:"Ваше ім'я та прізвище",phone:"Номер телефону",child:"Ім'я та прізвище дитини",
+    childBday:"Дата народження дитини",photo:"Фото профілю (необов'язково)",
     role:"Ваша роль",pass:"Пароль ролі",passHint:"Введіть пароль",wrongPass:"Невірний пароль. Зверніться до адміністратора.",
     c1:"Я погоджуюсь на збір даних",c2:"Я погоджуюсь з обробкою персональних даних",
     submit:"Зареєструватися",err:"Заповніть всі поля та підтвердіть обидві згоди",
@@ -122,6 +212,7 @@ ru:{
   reg:{
     welcome:"Добро пожаловать",sub:"Зарегистрируйтесь для доступа",
     name:"Ваше имя и фамилия",phone:"Номер телефона",child:"Имя ребёнка",
+    childBday:"Дата рождения ребёнка",photo:"Фото профиля (необязательно)",
     role:"Ваша роль",pass:"Пароль роли",passHint:"Введите пароль",wrongPass:"Неверный пароль. Обратитесь к администратору.",
     c1:"Я соглашаюсь со сбором данных",c2:"Я соглашаюсь с обработкой персональных данных",
     submit:"Зарегистрироваться",err:"Заполните все поля и подтвердите оба согласия",
@@ -189,8 +280,9 @@ function Btn({v="pri",cls="",ch,...p}){
   const s={pri:"bg-gradient-to-r from-violet-600 to-indigo-600 hover:from-violet-700 hover:to-indigo-700 text-white shadow-md shadow-violet-200",sec:"bg-slate-100 hover:bg-slate-200 text-slate-700",ghost:"text-violet-600 hover:bg-violet-50",sm:"bg-violet-100 text-violet-700 hover:bg-violet-200 text-sm"};
   return <button className={`rounded-xl px-4 py-2.5 text-sm font-semibold transition-all ${s[v]} ${cls}`} {...p}>{ch||p.children}</button>;
 }
-function Av({name,sz="md"}){
+function Av({name,photo,sz="md"}){
   const s={sm:"w-8 h-8 text-xs",md:"w-10 h-10 text-sm",lg:"w-12 h-12 text-base"};
+  if(photo) return <img src={photo} alt={name} className={`${s[sz]} rounded-full object-cover flex-shrink-0 border-2 border-white shadow`}/>;
   return <div className={`${s[sz]} ${AVT_CLR(name)} rounded-full flex items-center justify-center font-bold flex-shrink-0`}>{INI(name)}</div>;
 }
 function SL({children}){return <p className="text-xs font-bold text-slate-400 uppercase tracking-widest mb-2 mt-5 first:mt-0">{children}</p>}
@@ -199,16 +291,41 @@ function Empty({text}){return <div className="text-center py-14 text-slate-400">
 // ── REGISTRATION ──────────────────────────────────────────────────────────────
 function RegScreen({lang,setLang,onReg}){
   const t=L[lang];const r=t.reg;
-  const [form,setForm]=useState({name:"",phone:"",child:"",role:"parent",pass:""});
+  const [form,setForm]=useState({name:"",phone:"",child:"",childBirthday:"",role:"parent",pass:"",photo:""});
   const [c1,setC1]=useState(false);const[c2,setC2]=useState(false);
   const [err,setErr]=useState("");const[cm,setCm]=useState(null);
+  const photoRef=useRef(null);
   const needPass=form.role!=="parent";
   const set=(k,v)=>setForm(f=>({...f,[k]:v}));
+  const handlePhoto=e=>{
+    const f=e.target.files[0]; if(!f) return;
+    const rd=new FileReader();
+    rd.onload=ev=>set("photo",ev.target.result);
+    rd.readAsDataURL(f);
+    e.target.value="";
+  };
   const submit=()=>{
     if(!form.name.trim()||!form.child.trim()||!c1||!c2){setErr(r.err);return;}
     if(needPass&&form.pass!==ROLE_PASSWORDS[form.role]){setErr(r.wrongPass);return;}
-    const u={id:Date.now(),name:form.name,phone:form.phone,child:form.child,role:form.role};
-    localStorage.setItem("rc_user",JSON.stringify(u));onReg(u);
+    const id=Date.now();
+    const u={id,name:form.name,phone:form.phone,child:form.child,childRu:form.child,
+             childBirthday:form.childBirthday,role:form.role,photo:form.photo};
+    localStorage.setItem("rc_user",JSON.stringify(u));
+    // Додаємо батьків у спільну Firebase базу
+    if(window._db){
+      window._db.ref(`${DB_ROOT}/parents/${id}`).set({
+        id, name:form.name, nameRu:form.name,
+        child:form.child, childRu:form.child,
+        childBirthday:form.childBirthday,
+        phone:form.phone, role:form.role, photo:form.photo, comment:""
+      }).catch(()=>{});
+    }
+    // Telegram повідомлення адміністратору
+    const roleNames={parent:"Батько/Мати",teacher:"Вчитель",admin:"Адміністратор",chairman:"Голова комітету"};
+    sendTgMsg(`🆕 <b>Нова реєстрація — 1Б клас</b>\n\n👤 <b>${form.name}</b>\n👦 Дитина: ${form.child}${form.childBirthday?"\n🎂 Д/н: "+form.childBirthday:""}\n📞 Тел: ${form.phone||"—"}\n🏷 Роль: ${roleNames[form.role]}\n🕐 ${new Date().toLocaleString("uk-UA")}`);
+    // Дозвіл на push-повідомлення
+    requestNotifPerm();
+    onReg(u);
   };
   return(
     <div className="min-h-screen flex flex-col items-center justify-center p-4" style={{background:"linear-gradient(135deg,#f0f4ff 0%,#faf0ff 100%)"}}>
@@ -225,9 +342,20 @@ function RegScreen({lang,setLang,onReg}){
           <p className="text-violet-600 text-sm font-semibold mt-1">{t.school}</p>
         </div>
         <div className="bg-white rounded-3xl shadow-xl shadow-slate-200/80 p-6 space-y-4">
+          {/* Photo */}
+          <Fld label={r.photo}>
+            <div className="flex items-center gap-3">
+              <div className="w-14 h-14 rounded-full overflow-hidden bg-violet-100 flex items-center justify-center flex-shrink-0 cursor-pointer border-2 border-dashed border-violet-300" onClick={()=>photoRef.current&&photoRef.current.click()}>
+                {form.photo?<img src={form.photo} className="w-full h-full object-cover" alt=""/>:<span className="text-2xl">📷</span>}
+              </div>
+              <input ref={photoRef} type="file" accept="image/*" className="hidden" onChange={handlePhoto}/>
+              <button onClick={()=>photoRef.current&&photoRef.current.click()} className="text-xs text-violet-600 font-semibold hover:underline">{form.photo?"Змінити фото":"Обрати фото"}</button>
+            </div>
+          </Fld>
           <Fld label={r.name}><input className={INP} placeholder={r.name} value={form.name} onChange={e=>set("name",e.target.value)}/></Fld>
           <Fld label={r.phone}><input className={INP} placeholder="+380 00 000 00 00" value={form.phone} onChange={e=>set("phone",e.target.value)}/></Fld>
           <Fld label={r.child}><input className={INP} placeholder={r.child} value={form.child} onChange={e=>set("child",e.target.value)}/></Fld>
+          <Fld label={r.childBday}><input className={INP} type="date" value={form.childBirthday} onChange={e=>set("childBirthday",e.target.value)}/></Fld>
           <Fld label={r.role}><select className={INP} value={form.role} onChange={e=>set("role",e.target.value)}>{Object.entries(t.roles).map(([k,v])=><option key={k} value={k}>{v}</option>)}</select></Fld>
           {needPass&&<Fld label={r.pass}><input className={INP} type="password" placeholder={r.passHint} value={form.pass} onChange={e=>set("pass",e.target.value)}/></Fld>}
           <div className="pt-2 space-y-3 border-t border-slate-100">
@@ -254,34 +382,88 @@ function RegScreen({lang,setLang,onReg}){
   );
 }
 
+// ── CHANGE ROLE MODAL ─────────────────────────────────────────────────────────
+function ChangeRoleModal({lang,user,onClose,onRoleChange}){
+  const ua=lang==="ua";
+  const [role,setRole]=useState(user.role);
+  const [pass,setPass]=useState("");
+  const [err,setErr]=useState("");
+  const roles=L[lang].roles;
+  const submit=()=>{
+    if(role===user.role){onClose();return;}
+    if(role==="parent"){
+      // Повернення до ролі "батько" — без паролю
+      const u={...user,role:"parent"};
+      localStorage.setItem("rc_user",JSON.stringify(u));
+      onRoleChange(u);onClose();return;
+    }
+    if(!ROLE_PASSWORDS[role]||pass!==ROLE_PASSWORDS[role]){
+      setErr(ua?"Невірний пароль":"Неверный пароль");return;
+    }
+    const u={...user,role};
+    localStorage.setItem("rc_user",JSON.stringify(u));
+    onRoleChange(u);onClose();
+  };
+  return(
+    <Modal show={true} onClose={onClose} title={ua?"Змінити роль":"Сменить роль"}>
+      <div className="space-y-4">
+        <div>
+          <label className="block text-xs font-semibold text-slate-500 mb-1">{ua?"Нова роль":"Новая роль"}</label>
+          <select className={INP} value={role} onChange={e=>{setRole(e.target.value);setPass("");setErr("");}}>
+            {Object.entries(roles).map(([k,v])=><option key={k} value={k}>{v}</option>)}
+          </select>
+        </div>
+        {role!=="parent"&&role!==user.role&&(
+          <div>
+            <label className="block text-xs font-semibold text-slate-500 mb-1">{ua?"Пароль ролі":"Пароль роли"}</label>
+            <input className={INP} type="password" placeholder={ua?"Введіть пароль":"Введите пароль"} value={pass} onChange={e=>setPass(e.target.value)}/>
+          </div>
+        )}
+        {err&&<p className="text-rose-500 text-xs font-medium">{err}</p>}
+        <div className="flex gap-2 pt-1">
+          <Btn onClick={onClose} cls="flex-1 text-center justify-center bg-slate-100 text-slate-700 hover:bg-slate-200">{ua?"Скасувати":"Отмена"}</Btn>
+          <Btn onClick={submit} cls="flex-1 text-center justify-center">{ua?"Підтвердити":"Подтвердить"}</Btn>
+        </div>
+      </div>
+    </Modal>
+  );
+}
+
 // ── MAIN ──────────────────────────────────────────────────────────────────────
 function App(){
   const[lang,setLang]=useState(()=>localStorage.getItem("rc_lang")||"ua");
   const[user,setUser]=useState(()=>{try{return JSON.parse(localStorage.getItem("rc_user"))||null;}catch(e){return null;}});
+  const[showRoleModal,setShowRoleModal]=useState(false);
   useEffect(()=>localStorage.setItem("rc_lang",lang),[lang]);
   useEffect(()=>{const tg=window.Telegram&&window.Telegram.WebApp;if(tg){tg.ready();tg.expand();};},[]);
   if(!user)return<RegScreen lang={lang} setLang={setLang} onReg={u=>setUser(u)}/>;
-  return<MainApp lang={lang} setLang={setLang} user={user}/>;
+  return(
+    <>
+      <MainApp lang={lang} setLang={setLang} user={user} onChangeRole={()=>setShowRoleModal(true)}/>
+      {showRoleModal&&<ChangeRoleModal lang={lang} user={user} onClose={()=>setShowRoleModal(false)} onRoleChange={u=>setUser(u)}/>}
+    </>
+  );
 }
 
-function MainApp({lang,setLang,user}){
+function MainApp({lang,setLang,user,onChangeRole}){
   const t=L[lang];const ua=lang==="ua";
   const [tab,setTab]=useState("ann");
   const [modal,setModal]=useState(null);
-  const [ann,setAnn]=useState([]);
-  const [parents,setParents]=useState([]);
-  const [colls,setColls]=useState([]);
-  const [exps,setExps]=useState([]);
-  const [events,setEvents]=useState([]);
-  const [polls,setPolls]=useState([]);
-  const [photos,setPhotos]=useState([]);
-  const [needs,setNeeds]=useState([]);
-  const [helpReqs,setHelpReqs]=useState([]);
-  const [topSt,setTopSt]=useState([]);
-  const [topPar,setTopPar]=useState([]);
-  const [docsData,setDocsData]=useState([]);
-  const [teachers,setTeachers]=useState([]);
-  const [schedule,setSchedule]=useState([]);
+  // ── Спільні дані (Firebase — однакові у всіх користувачів) ──────────────────
+  const [ann,setAnn]=useFBState("ann");
+  const [parents,setParents]=useFBState("parents");
+  const [colls,setColls]=useFBState("colls");
+  const [exps,setExps]=useFBState("exps");
+  const [events,setEvents]=useFBState("events");
+  const [polls,setPolls]=useFBState("polls");
+  const [photos,setPhotos]=useFBState("photos");
+  const [needs,setNeeds]=useFBState("needs");
+  const [helpReqs,setHelpReqs]=useFBState("helpReqs");
+  const [topSt,setTopSt]=useFBState("topSt");
+  const [topPar,setTopPar]=useFBState("topPar");
+  const [docsData,setDocsData]=useFBState("docsData");
+  const [teachers,setTeachers]=useFBState("teachers");
+  const [schedule,setSchedule]=useFBState("schedule");
   const [docOpen,setDocOpen]=useState({});
   const [finTab,setFinTab]=useState("coll");
   const [topTab,setTopTab]=useState("students");
@@ -320,7 +502,16 @@ function MainApp({lang,setLang,user}){
   const canSched=CAN_SCHED.includes(user.role);
   const totColl=colls.reduce((s,c)=>s+c.payments.filter(p=>p.paid).length*c.amount,0);
   const totExp=exps.reduce((s,e)=>s+e.amount,0);
-  const upBday=BDAYS.map(b=>({...b,days:daysUntil(b.d)})).filter(b=>b.days>=0&&b.days<=30).sort((a,b)=>a.days-b.days)[0];
+  // Дні народження дітей з профілів батьків (щорічні)
+  const bDaysUntil = d => {
+    const now=new Date(); const b=new Date(d);
+    b.setFullYear(now.getFullYear());
+    if(b<now) b.setFullYear(now.getFullYear()+1);
+    return Math.ceil((b-now)/86400000);
+  };
+  const childBdays = parents.filter(p=>p.childBirthday)
+    .map(p=>({n:ua?p.child:p.childRu||p.child, nRu:p.childRu||p.child, d:p.childBirthday}));
+  const upBday = childBdays.map(b=>({...b,days:bDaysUntil(b.d)})).filter(b=>b.days>=0&&b.days<=7).sort((a,b)=>a.days-b.days)[0];
 
   const addAnn=()=>{if(!fAnn.title.trim()||!fAnn.text.trim())return;setAnn(p=>[{id:Date.now(),title:fAnn.title,titleRu:fAnn.title,text:fAnn.text,textRu:fAnn.text,date:today(),author:user.name,pinned:false},...p]);setFAnn({title:"",text:""});setModal(null);};
   const addEv=()=>{if(!fEv.title.trim()||!fEv.date)return;setEvents(p=>[...p,{id:Date.now(),title:fEv.title,titleRu:fEv.title,date:fEv.date,time:fEv.time,type:fEv.type,vol:[]}].sort((a,b)=>a.date.localeCompare(b.date)));setFEv({title:"",date:"",time:"",type:"meeting"});setModal(null);};
@@ -401,7 +592,8 @@ function MainApp({lang,setLang,user}){
               <div className="flex gap-0.5 bg-white/10 rounded-xl p-1">
                 {["ua","ru"].map(l=><button key={l} onClick={()=>setLang(l)} className={`px-2.5 py-1 rounded-lg text-xs font-black transition-all ${lang===l?"bg-white text-violet-700 shadow":"text-white/70 hover:text-white"}`}>{l.toUpperCase()}</button>)}
               </div>
-              <div className={`w-9 h-9 rounded-full flex items-center justify-center text-xs font-black shadow-lg ${AVT_CLR(user.name)}`}>{INI(user.name)}</div>
+              <button onClick={onChangeRole} title={ua?"Змінити роль":"Сменить роль"} className="w-9 h-9 rounded-full flex items-center justify-center text-white bg-white/15 hover:bg-white/25 transition-all text-base" style={{flexShrink:0}}>🔑</button>
+              {user.photo?<img src={user.photo} alt={user.name} className="w-9 h-9 rounded-full object-cover border-2 border-white/50 shadow-lg flex-shrink-0"/>:<div className={`w-9 h-9 rounded-full flex items-center justify-center text-xs font-black shadow-lg ${AVT_CLR(user.name)}`}>{INI(user.name)}</div>}
             </div>
           </div>
           {upBday&&<div className="mt-2 bg-white/15 backdrop-blur rounded-xl px-3 py-2 flex items-center gap-2"><span className="text-base">🎂</span><span className="text-white/90 text-xs font-medium">{ua?upBday.n:upBday.nRu} — {upBday.days===0?t.ev.today:t.ev.inDays.replace("{n}",upBday.days)}</span></div>}
@@ -559,7 +751,7 @@ function MainApp({lang,setLang,user}){
           {upEv.length>0&&<><SL>{t.ev.up}</SL><div className="space-y-3 mb-2">{upEv.map(ev=>{const s=EVT_S[ev.type]||EVT_S.other;const joined=ev.vol.includes(user.name);return(<div key={ev.id} className="card"><div className={`h-1.5 ${s.dot}`}/><div className="card-inner"><div className="flex items-start gap-3"><div className={`w-2.5 h-2.5 rounded-full mt-1 flex-shrink-0 ${s.dot}`}/><div className="flex-1"><h3 className="font-bold text-slate-900">{ua?ev.title:ev.titleRu}</h3><p className="text-xs text-slate-500 mt-0.5">{ev.date}{ev.time?` · ${ev.time}`:""}</p><span className={`inline-block mt-1.5 text-xs font-bold px-2.5 py-1 rounded-full ${s.bg} ${s.text}`}>{t.ev.types[ev.type]}</span></div>{canPost&&<div className="flex gap-1 flex-shrink-0"><button onClick={()=>{setEditEv({...ev});setModal("editEv");}} className="w-7 h-7 flex items-center justify-center rounded-lg bg-slate-100 hover:bg-blue-100 text-slate-400 hover:text-blue-500 text-sm transition-colors">✏️</button><button onClick={()=>delEv(ev.id)} className="w-7 h-7 flex items-center justify-center rounded-lg bg-slate-100 hover:bg-red-100 text-slate-400 hover:text-red-500 text-sm transition-colors">✕</button></div>}</div>{ev.type!=="birthday"&&<div className="mt-3 pt-3 border-t border-slate-50 flex items-center justify-between"><p className="text-xs text-slate-400">{t.ev.vol}: {ev.vol.length>0?ev.vol.join(", "):t.ev.noVol}</p><button onClick={()=>joinVol(ev.id)} disabled={joined} className={`text-xs font-bold px-3 py-1.5 rounded-xl transition-all ${joined?"bg-emerald-100 text-emerald-700":"bg-violet-100 text-violet-700 hover:bg-violet-200"}`}>{joined?t.ev.joined:t.ev.join}</button></div>}</div></div>);})}</div></>}
           {pastEv.length>0&&<><SL>{t.ev.past}</SL><div className="space-y-2 mb-2">{pastEv.map(ev=>{const s=EVT_S[ev.type]||EVT_S.other;return(<div key={ev.id} className="card opacity-60"><div className="card-inner flex items-center gap-3 py-3"><div className={`w-2 h-2 rounded-full flex-shrink-0 ${s.dot}`}/><div className="flex-1"><p className="text-sm font-semibold text-slate-700">{ua?ev.title:ev.titleRu}</p><p className="text-xs text-slate-400">{ev.date}</p></div><span className={`text-xs font-bold px-2 py-0.5 rounded-full ${s.bg} ${s.text}`}>{t.ev.types[ev.type]}</span></div></div>);})}</div></>}
           <SL>{t.ev.bdays}</SL>
-          <div className="card"><div className="card-inner p-0">{BDAYS.map((b,i)=>{const d=daysUntil(b.d);return(<div key={i} className={`flex items-center justify-between p-4 ${i>0?"border-t border-slate-50":""}`}><div><p className="font-semibold text-slate-800 text-sm">{ua?b.n:b.nRu}</p><p className="text-xs text-slate-400">{b.d}</p></div><span className={`text-xs font-bold px-3 py-1 rounded-full ${d===0?"bg-rose-100 text-rose-600":d<=7?"bg-amber-100 text-amber-700":"bg-slate-100 text-slate-500"}`}>{d===0?t.ev.today:d>0?t.ev.inDays.replace("{n}",d):t.ev.passed}</span></div>);})}</div></div>
+          <div className="card"><div className="card-inner p-0">{childBdays.length===0?<p className="text-slate-400 text-sm text-center py-4">{ua?"Дні народження з'являться після реєстрації батьків":"Дни рождения появятся после регистрации родителей"}</p>:childBdays.map((b,i)=>{const d=bDaysUntil(b.d);return(<div key={i} className={`flex items-center justify-between p-4 ${i>0?"border-t border-slate-50":""}`}><div><p className="font-semibold text-slate-800 text-sm">🎂 {ua?b.n:b.nRu}</p><p className="text-xs text-slate-400">{b.d}</p></div><span className={`text-xs font-bold px-3 py-1 rounded-full ${d===0?"bg-rose-100 text-rose-600":d<=7?"bg-amber-100 text-amber-700":"bg-slate-100 text-slate-500"}`}>{d===0?t.ev.today:t.ev.inDays.replace("{n}",d)}</span></div>);})}</div></div>
           <Modal show={modal==="ev"} onClose={()=>setModal(null)} title={t.ev.newEv}>
             <div className="space-y-3"><Fld label={ua?"Назва":"Название"}><input className={INP} value={fEv.title} onChange={e=>setFEv(f=>({...f,title:e.target.value}))}/></Fld><div className="grid grid-cols-2 gap-2"><Fld label="Дата"><input className={INP} type="date" value={fEv.date} onChange={e=>setFEv(f=>({...f,date:e.target.value}))}/></Fld><Fld label="Час"><input className={INP} type="time" value={fEv.time} onChange={e=>setFEv(f=>({...f,time:e.target.value}))}/></Fld></div><Fld label="Тип"><select className={INP} value={fEv.type} onChange={e=>setFEv(f=>({...f,type:e.target.value}))}>{Object.entries(t.ev.types).map(([k,v])=><option key={k} value={k}>{v}</option>)}</select></Fld><div className="flex gap-2 pt-1"><Btn cls="flex-1 text-center" onClick={addEv}>{t.common.add}</Btn><Btn v="sec" onClick={()=>setModal(null)}>{t.common.cancel}</Btn></div></div>
           </Modal>
@@ -574,9 +766,9 @@ function MainApp({lang,setLang,user}){
         <div>
           <div className="flex justify-between items-center mb-3"><h2 className="font-black text-slate-800 text-lg">{t.par.title} ({parents.length})</h2><Btn onClick={()=>setModal("par")}>{t.par.add}</Btn></div>
           <input className={`${INP} mb-3`} placeholder={t.par.search} value={psearch} onChange={e=>setPsearch(e.target.value)}/>
-          {filtPar.filter(p=>p.role!=="parent").length>0&&<><SL>{t.par.comm}</SL><div className="space-y-2 mb-2">{filtPar.filter(p=>p.role!=="parent").map(p=>{const isOwn=p.id===user.id||p.name===user.name;return(<div key={p.id} className="card"><div className="h-1 grad-violet"/><div className="card-inner flex items-center gap-3"><Av name={ua?p.name:p.nameRu} sz="md"/><div className="flex-1"><p className="font-bold text-slate-900 text-sm">{ua?p.name:p.nameRu}</p><p className="text-xs text-slate-500">{ua?p.child:p.childRu} · {p.phone}</p>{p.comment&&<p className="text-xs text-slate-400 mt-0.5 italic">{p.comment}</p>}</div><div className="flex items-center gap-1"><span className="text-xs font-bold px-2.5 py-1 rounded-full bg-violet-100 text-violet-700">{t.roles[p.role]}</span>{(canPost||isOwn)&&<button onClick={()=>{setEditPar({...p,comment:p.comment||""});setModal("editPar");}} className="w-7 h-7 flex items-center justify-center rounded-lg bg-slate-100 hover:bg-blue-100 text-slate-400 hover:text-blue-500 text-sm transition-colors">✏️</button>}{canPost&&<button onClick={()=>setParents(x=>x.filter(q=>q.id!==p.id))} className="w-7 h-7 flex items-center justify-center rounded-lg bg-slate-100 hover:bg-red-100 text-slate-400 hover:text-red-500 text-sm transition-colors">✕</button>}</div></div></div>);})}</div></>}
+          {filtPar.filter(p=>p.role!=="parent").length>0&&<><SL>{t.par.comm}</SL><div className="space-y-2 mb-2">{filtPar.filter(p=>p.role!=="parent").map(p=>{const isOwn=p.id===user.id||p.name===user.name;return(<div key={p.id} className="card"><div className="h-1 grad-violet"/><div className="card-inner flex items-center gap-3"><Av name={ua?p.name:p.nameRu} photo={p.photo} sz="md"/><div className="flex-1"><p className="font-bold text-slate-900 text-sm">{ua?p.name:p.nameRu}</p><p className="text-xs text-slate-500">{ua?p.child:p.childRu} · {p.phone}</p>{p.comment&&<p className="text-xs text-slate-400 mt-0.5 italic">{p.comment}</p>}</div><div className="flex items-center gap-1"><span className="text-xs font-bold px-2.5 py-1 rounded-full bg-violet-100 text-violet-700">{t.roles[p.role]}</span>{(canPost||isOwn)&&<button onClick={()=>{setEditPar({...p,comment:p.comment||""});setModal("editPar");}} className="w-7 h-7 flex items-center justify-center rounded-lg bg-slate-100 hover:bg-blue-100 text-slate-400 hover:text-blue-500 text-sm transition-colors">✏️</button>}{canPost&&<button onClick={()=>setParents(x=>x.filter(q=>q.id!==p.id))} className="w-7 h-7 flex items-center justify-center rounded-lg bg-slate-100 hover:bg-red-100 text-slate-400 hover:text-red-500 text-sm transition-colors">✕</button>}</div></div></div>);})}</div></>}
           <SL>{t.par.all}</SL>
-          <div className="space-y-2">{filtPar.filter(p=>p.role==="parent").map(p=>{const isOwn=p.id===user.id||p.name===user.name;return(<div key={p.id} className="card"><div className="card-inner flex items-center gap-3 py-3"><Av name={ua?p.name:p.nameRu} sz="sm"/><div className="flex-1"><p className="font-semibold text-slate-800 text-sm">{ua?p.name:p.nameRu}</p><p className="text-xs text-slate-500">{ua?p.child:p.childRu} · {p.phone}</p>{p.comment&&<p className="text-xs text-slate-400 mt-0.5 italic">{p.comment}</p>}</div><div className="flex gap-1">{(canPost||isOwn)&&<button onClick={()=>{setEditPar({...p,comment:p.comment||""});setModal("editPar");}} className="w-7 h-7 flex items-center justify-center rounded-lg bg-slate-100 hover:bg-blue-100 text-slate-400 hover:text-blue-500 text-sm transition-colors">✏️</button>}{canPost&&<button onClick={()=>setParents(x=>x.filter(q=>q.id!==p.id))} className="w-7 h-7 flex items-center justify-center rounded-lg bg-slate-100 hover:bg-red-100 text-slate-400 hover:text-red-500 text-sm transition-colors">✕</button>}</div></div></div>);})}</div>
+          <div className="space-y-2">{filtPar.filter(p=>p.role==="parent").map(p=>{const isOwn=p.id===user.id||p.name===user.name;return(<div key={p.id} className="card"><div className="card-inner flex items-center gap-3 py-3"><Av name={ua?p.name:p.nameRu} photo={p.photo} sz="sm"/><div className="flex-1"><p className="font-semibold text-slate-800 text-sm">{ua?p.name:p.nameRu}</p><p className="text-xs text-slate-500">{ua?p.child:p.childRu} · {p.phone}</p>{p.comment&&<p className="text-xs text-slate-400 mt-0.5 italic">{p.comment}</p>}</div><div className="flex gap-1">{(canPost||isOwn)&&<button onClick={()=>{setEditPar({...p,comment:p.comment||""});setModal("editPar");}} className="w-7 h-7 flex items-center justify-center rounded-lg bg-slate-100 hover:bg-blue-100 text-slate-400 hover:text-blue-500 text-sm transition-colors">✏️</button>}{canPost&&<button onClick={()=>setParents(x=>x.filter(q=>q.id!==p.id))} className="w-7 h-7 flex items-center justify-center rounded-lg bg-slate-100 hover:bg-red-100 text-slate-400 hover:text-red-500 text-sm transition-colors">✕</button>}</div></div></div>);})}</div>
           <Modal show={modal==="par"} onClose={()=>setModal(null)} title={t.par.add}>
             <div className="space-y-3"><Fld label={t.par.pName}><input className={INP} value={fPar.name} onChange={e=>setFPar(f=>({...f,name:e.target.value}))}/></Fld><Fld label={t.par.cName}><input className={INP} value={fPar.child} onChange={e=>setFPar(f=>({...f,child:e.target.value}))}/></Fld><Fld label={t.par.phone}><input className={INP} value={fPar.phone} onChange={e=>setFPar(f=>({...f,phone:e.target.value}))}/></Fld><Fld label={t.par.role}><select className={INP} value={fPar.role} onChange={e=>setFPar(f=>({...f,role:e.target.value}))}>{Object.entries(t.roles).map(([k,v])=><option key={k} value={k}>{v}</option>)}</select></Fld><div className="flex gap-2 pt-1"><Btn cls="flex-1 text-center" onClick={addPar}>{t.common.add}</Btn><Btn v="sec" onClick={()=>setModal(null)}>{t.common.cancel}</Btn></div></div>
           </Modal>
@@ -595,7 +787,7 @@ function MainApp({lang,setLang,user}){
       {/* ─── ОПИТУВАННЯ ──────────────────────────────────────────────── */}
       {tab==="pol"&&(
         <div>
-          <div className="flex justify-between items-center mb-3"><h2 className="font-black text-slate-800 text-lg">{t.pol.title}</h2><Btn onClick={()=>setModal("poll")}>{t.pol.create}</Btn></div>
+          <div className="flex justify-between items-center mb-3"><h2 className="font-black text-slate-800 text-lg">{t.pol.title}</h2>{canPost&&<Btn onClick={()=>setModal("poll")}>{t.pol.create}</Btn>}</div>
           <div className="space-y-4">
             {polls.map(poll=>{
               const total=poll.votes.reduce((a,b)=>a+b,0);const maxV=Math.max(...poll.votes);
