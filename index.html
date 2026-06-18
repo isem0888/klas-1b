@@ -142,37 +142,10 @@ ru:{
 }};
 
 // ── DATA ──────────────────────────────────────────────────────────────────────
-const DOCS_DATA=[
-  {id:1,icon:"📋",date:"2025-09-10",name:"Протокол зборів №1",nameRu:"Протокол собрания №1",
-   content:"ПРОТОКОЛ №1 батьківських зборів 1Б класу Гімназії 101\nДата: 10.09.2025\nГоловуючий: Іванова Марина\n\nПОРЯДОК ДЕННОГО:\n1. Організаційні питання\n2. Вибори комітету\n3. Фінансові питання\n\nВИРІШИЛИ:\n✓ Голова — Іванова Марина\n✓ Казначей — Петренко Олексій\n✓ Внески — 300 грн/міс\n✓ Наступні збори — листопад 2025",
-   contentRu:"ПРОТОКОЛ №1 родительского собрания 1Б класса Гимназии 101\nДата: 10.09.2025\nПредседатель: Иванова Марина\n\nПОВЕСТКА:\n1. Организационные вопросы\n2. Выборы комитета\n3. Финансовые вопросы\n\nРЕШИЛИ:\n✓ Председатель — Иванова Марина\n✓ Казначей — Петренко Алексей\n✓ Взносы — 300 грн/мес\n✓ Следующее собрание — ноябрь 2025"},
-  {id:2,icon:"👥",date:"2025-09-01",name:"Список батьків 1Б класу",nameRu:"Список родителей 1Б",
-   content:"СПИСОК БАТЬКІВ 1Б КЛАСУ • 2025–2026\n\n1. Іванова Марина — Іванов Олексій — +380 99 123 45 67\n2. Петренко Олексій — Петренко Аня — +380 99 234 56 78\n3. Сидоренко Ольга — Сидоренко Микола — +380 99 345 67 89\n4. Козловська Тетяна — Козловський Дмитро — +380 99 456 78 90\n...\n\nКл. керівник: Смирнова А.І. +380 99 100 11 22",
-   contentRu:"СПИСОК РОДИТЕЛЕЙ 1Б КЛАССА • 2025–2026\n\n1. Иванова Марина — Иванов Алексей — +380 99 123 45 67\n2. Петренко Алексей — Петренко Аня — +380 99 234 56 78\n3. Сидоренко Ольга — Сидоренко Николай — +380 99 345 67 89\n4. Козловская Татьяна — Козловский Дмитрий — +380 99 456 78 90\n...\n\nКл. руководитель: Смирнова А.И. +380 99 100 11 22"},
-  {id:3,icon:"💰",date:"2025-12-31",name:"Звіт про витрати I півріччя",nameRu:"Отчёт о расходах I полугодия",
-   content:"ФІНАНСОВИЙ ЗВІТ • I півріччя 2025–2026\n\nНАДХОДЖЕННЯ:\nВнески (25 сімей × 300 × 3 міс)  22 500 грн\nДодаткові внески               +500 грн\nРАЗОМ:                          23 000 грн\n\nВИТРАТИ:\n01.09 Квіти на 1 вересня       1 450 грн\n15.10 Канцелярія                1 200 грн\n20.11 Похід до театру           3 750 грн\n20.12 Новорічні подарунки       8 750 грн\n25.12 Прикраси класу              980 грн\nРАЗОМ:                          16 130 грн\n\nЗАЛИШОК: 6 870 грн",
-   contentRu:"ФИНАНСОВЫЙ ОТЧЁТ • I полугодие 2025–2026\n\nПОСТУПЛЕНИЯ:\nВзносы (25 семей × 300 × 3 мес)  22 500 грн\nДоп. взносы                      +500 грн\nИТОГО:                           23 000 грн\n\nРАСХОДЫ:\n01.09 Цветы на 1 сентября        1 450 грн\n15.10 Канцтовары                  1 200 грн\n20.11 Поход в театр               3 750 грн\n20.12 Новогодние подарки          8 750 грн\n25.12 Украшения класса              980 грн\nИТОГО:                           16 130 грн\n\nОСТАТОК: 6 870 грн"},
-  {id:4,icon:"📌",date:"2025-09-01",name:"Пам'ятка для батьків першокласників",nameRu:"Памятка для родителей первоклассников",
-   content:"ПАМ'ЯТКА ДЛЯ БАТЬКІВ • Гімназія 101, 1Б клас\n\nРЕЖИМ:\n• Початок уроків: 8:30\n• Прийом учнів: з 8:00\n• Продовжена група: до 17:00\n\nПОРТФЕЛЬ:\n✓ Щоденник, пенал, зошити\n✓ Змінне взуття, вода\n✓ Невеликий перекус\n\nФОРМА:\n• Верх: біла/блакитна сорочка\n• Низ: темні штани/спідниця\n\nКОНТАКТИ:\nКл. керівник: Смирнова А.І.\n+380 99 100 11 22\nГімназія: +380 44 000 11 22",
-   contentRu:"ПАМЯТКА ДЛЯ РОДИТЕЛЕЙ • Гимназия 101, 1Б класс\n\nРЕЖИМ:\n• Начало уроков: 8:30\n• Приём с 8:00\n• Продлёнка до 17:00\n\nПОРТФЕЛЬ:\n✓ Дневник, пенал, тетради\n✓ Сменная обувь, вода\n✓ Небольшой перекус\n\nФОРМА:\n• Верх: белая/голубая рубашка\n• Низ: тёмные брюки/юбка\n\nКОНТАКТЫ:\nКл. рук.: Смирнова А.И.\n+380 99 100 11 22\nГимназия: +380 44 000 11 22"},
-];
-const SCHEDULE=[
-  {d:"Пн",l:["Математика","Укр. мова","Читання","Фізкультура"]},
-  {d:"Вт",l:["Математика","Англійська","Образотворче","Музика"]},
-  {d:"Ср",l:["Укр. мова","Математика","Я досліджую світ","Фізкультура"]},
-  {d:"Чт",l:["Читання","Математика","Трудове","Англійська"]},
-  {d:"Пт",l:["Математика","Укр. мова","Я досліджую світ","Фізкультура"]},
-];
-const TEACHERS=[
-  {n:"Смирнова Анна Іванівна",nRu:"Смирнова Анна Ивановна",s:"Класний керівник, Математика",sRu:"Классный руководитель, Математика",p:"+380 99 100 11 22"},
-  {n:"Кузнецова Олена Петрівна",nRu:"Кузнецова Елена Петровна",s:"Укр. мова та читання",sRu:"Укр. язык и чтение",p:"+380 99 200 22 33"},
-  {n:"Попов Дмитро Сергійович",nRu:"Попов Дмитрий Сергеевич",s:"Фізкультура",sRu:"Физкультура",p:"+380 99 300 33 44"},
-];
-const BDAYS=[
-  {n:"Олексій І.",nRu:"Алексей И.",d:"2026-06-22"},
-  {n:"Аня П.",nRu:"Аня П.",d:"2026-07-10"},
-  {n:"Микола С.",nRu:"Николай С.",d:"2026-08-03"},
-];
+const DOCS_DATA=[];
+const SCHEDULE=[];
+const TEACHERS=[];
+const BDAYS=[];
 const EVT_S={
   meeting:{dot:"bg-blue-500",bg:"bg-blue-50",text:"text-blue-700"},
   trip:{dot:"bg-emerald-500",bg:"bg-emerald-50",text:"text-emerald-700"},
@@ -183,7 +156,9 @@ const EVT_S={
 const HELP_COLORS={food:"bg-orange-100 text-orange-700",clothes:"bg-purple-100 text-purple-700",supplies:"bg-blue-100 text-blue-700",transport:"bg-green-100 text-green-700",housing:"bg-red-100 text-red-700",other:"bg-gray-100 text-gray-700"};
 const TOP_LEVEL_STYLE={gold:"medal-gold",silver:"medal-silver",bronze:"medal-bronze"};
 const CAN_POST=["teacher","admin","chairman"];
-const CAN_MANAGE=["teacher","admin"];
+const CAN_MANAGE=["teacher","admin","chairman"];
+const CAN_FIN=["admin"];
+const CAN_SCHED=["teacher"];
 
 // ── UTILS ─────────────────────────────────────────────────────────────────────
 const today=()=>new Date().toISOString().split("T")[0];
@@ -293,29 +268,35 @@ function MainApp({lang,setLang,user}){
   const t=L[lang];const ua=lang==="ua";
   const [tab,setTab]=useState("ann");
   const [modal,setModal]=useState(null);
-  const [ann,setAnn]=useState([
-    {id:1,title:"Батьківські збори",titleRu:"Родительское собрание",text:"Збори 20 червня о 18:00 в класі.",textRu:"Собрание 20 июня в 18:00 в классе.",date:"2026-06-18",author:"Анна Іванівна",pinned:true},
-    {id:2,title:"Збір коштів на подарунок",titleRu:"Сбор средств на подарок",text:"300 грн до 25 червня.",textRu:"300 грн до 25 июня.",date:"2026-06-15",author:"Марина В.",pinned:false},
-  ]);
-  const [parents,setParents]=useState([
-    {id:1,name:"Іванова Марина",nameRu:"Иванова Марина",child:"Іванов Олексій",childRu:"Иванов Алексей",phone:"+380 99 123 45 67",role:"chairman"},
-    {id:2,name:"Петренко Олексій",nameRu:"Петренко Алексей",child:"Петренко Аня",childRu:"Петренко Аня",phone:"+380 99 234 56 78",role:"parent"},
-    {id:3,name:"Сидоренко Ольга",nameRu:"Сидоренко Ольга",child:"Сидоренко Микола",childRu:"Сидоренко Николай",phone:"+380 99 345 67 89",role:"parent"},
-  ]);
-  const [colls,setColls]=useState([{id:1,name:"Подарунок вчителю",nameRu:"Подарок учителю",amount:300,payments:[{id:1,p:"Іванова Марина",pRu:"Иванова Марина",paid:true},{id:2,p:"Петренко Олексій",pRu:"Петренко Алексей",paid:true},{id:3,p:"Сидоренко Ольга",pRu:"Сидоренко Ольга",paid:false}]}]);
-  const [exps,setExps]=useState([{id:1,desc:"Квіти на 1 вересня",descRu:"Цветы на 1 сентября",amount:450,date:"2025-09-01"},{id:2,desc:"Прикраси",descRu:"Украшения",amount:620,date:"2025-12-20"}]);
-  const [events,setEvents]=useState([{id:1,title:"Батьківські збори",titleRu:"Родительское собрание",date:"2026-06-20",time:"18:00",type:"meeting",vol:[]},{id:2,title:"Екскурсія",titleRu:"Экскурсия",date:"2026-06-28",time:"10:00",type:"trip",vol:["Іванова Марина"]}]);
-  const [polls,setPolls]=useState([{id:1,q:"Куди поїдемо на екскурсію?",qRu:"Куда поедем на экскурсию?",opts:["Музей","Зоопарк","Планетарій","Парк"],optsRu:["Музей","Зоопарк","Планетарий","Парк"],votes:[3,8,5,4],voted:null,active:true}]);
+  const [ann,setAnn]=useState([]);
+  const [parents,setParents]=useState([]);
+  const [colls,setColls]=useState([]);
+  const [exps,setExps]=useState([]);
+  const [events,setEvents]=useState([]);
+  const [polls,setPolls]=useState([]);
   const [photos,setPhotos]=useState([]);
-  const [needs,setNeeds]=useState([{id:1,item:"Маркери для дошки",itemRu:"Маркеры для доски",qty:"2 набори",desc:"Сині та чорні",descRu:"Синие и черные",helpers:[],done:false},{id:2,item:"Серветки",itemRu:"Салфетки",qty:"3 пачки",desc:"",descRu:"",helpers:[],done:false}]);
-  const [helpReqs,setHelpReqs]=useState([{id:1,type:"supplies",anon:false,name:"Сидоренко Ольга",nameRu:"Сидоренко Ольга",desc:"Потрібні кольорові олівці для дитини та зошити",descRu:"Нужны цветные карандаши и тетради",contact:"",date:"2026-06-10",helpers:3}]);
-  const [topSt,setTopSt]=useState([{id:1,name:"Іванов Олексій",nameRu:"Иванов Алексей",cat:"grades",lvl:"gold",reason:"Відмінник I семестру",reasonRu:"Отличник I семестра",date:"2026-01-15"},{id:2,name:"Петренко Аня",nameRu:"Петренко Аня",cat:"art",lvl:"silver",reason:"Призер міської олімпіади з малювання",reasonRu:"Призёр городской олимпиады по рисованию",date:"2026-02-20"}]);
-  const [topPar,setTopPar]=useState([{id:1,name:"Іванова Марина",nameRu:"Иванова Марина",cat:"org",reason:"Організувала 3 заходи класу",reasonRu:"Организовала 3 мероприятия класса",date:"2026-03-01"}]);
+  const [needs,setNeeds]=useState([]);
+  const [helpReqs,setHelpReqs]=useState([]);
+  const [topSt,setTopSt]=useState([]);
+  const [topPar,setTopPar]=useState([]);
+  const [docsData,setDocsData]=useState([]);
+  const [teachers,setTeachers]=useState([]);
+  const [schedule,setSchedule]=useState([]);
   const [docOpen,setDocOpen]=useState({});
   const [finTab,setFinTab]=useState("coll");
   const [topTab,setTopTab]=useState("students");
   const [psearch,setPsearch]=useState("");
   const fileRef=useRef(null);
+  const mediaRef=useRef(null);
+
+  // edit states
+  const [editAnn,setEditAnn]=useState(null);
+  const [editPar,setEditPar]=useState(null);
+  const [editEv,setEditEv]=useState(null);
+  const [editNeed,setEditNeed]=useState(null);
+  const [editDoc,setEditDoc]=useState(null);
+  const [editTeacher,setEditTeacher]=useState(null);
+  const [editSchedIdx,setEditSchedIdx]=useState(null);
 
   // forms
   const [fAnn,setFAnn]=useState({title:"",text:""});
@@ -323,15 +304,20 @@ function MainApp({lang,setLang,user}){
   const [fExp,setFExp]=useState({desc:"",amount:""});
   const [fCol,setFCol]=useState({name:"",amount:""});
   const [fPar,setFPar]=useState({name:"",child:"",phone:"",role:"parent"});
-  const [fPoll,setFPoll]=useState({q:"",opts:["","","",""]});
+  const [fPoll,setFPoll]=useState({q:"",opts:["","","",""],deadline:""});
   const [fNeed,setFNeed]=useState({item:"",qty:"",desc:""});
   const [fHelp,setFHelp]=useState({type:"food",anon:false,name:"",desc:"",contact:""});
   const [fTopSt,setFTopSt]=useState({name:"",cat:"grades",lvl:"gold",reason:""});
   const [fTopPar,setFTopPar]=useState({name:"",cat:"vol",reason:""});
+  const [fDoc,setFDoc]=useState({icon:"📋",name:"",content:""});
+  const [fTeacher,setFTeacher]=useState({n:"",s:"",p:""});
+  const [fSched,setFSched]=useState({d:"",l:["","","","",""]});
   const [photoModal,setPhotoModal]=useState(null);
 
   const canPost=CAN_POST.includes(user.role);
   const canMgr=CAN_MANAGE.includes(user.role);
+  const canFin=CAN_FIN.includes(user.role);
+  const canSched=CAN_SCHED.includes(user.role);
   const totColl=colls.reduce((s,c)=>s+c.payments.filter(p=>p.paid).length*c.amount,0);
   const totExp=exps.reduce((s,e)=>s+e.amount,0);
   const upBday=BDAYS.map(b=>({...b,days:daysUntil(b.d)})).filter(b=>b.days>=0&&b.days<=30).sort((a,b)=>a.days-b.days)[0];
@@ -341,11 +327,32 @@ function MainApp({lang,setLang,user}){
   const addExp=()=>{if(!fExp.desc.trim()||!fExp.amount)return;setExps(p=>[...p,{id:Date.now(),desc:fExp.desc,descRu:fExp.desc,amount:+fExp.amount,date:today()}]);setFExp({desc:"",amount:""});setModal(null);};
   const addCol=()=>{if(!fCol.name.trim()||!fCol.amount)return;setColls(p=>[...p,{id:Date.now(),name:fCol.name,nameRu:fCol.name,amount:+fCol.amount,payments:parents.map((pr,i)=>({id:i,p:pr.name,pRu:pr.nameRu,paid:false}))}]);setFCol({name:"",amount:""});setModal(null);};
   const addPar=()=>{if(!fPar.name.trim())return;setParents(p=>[...p,{id:Date.now(),name:fPar.name,nameRu:fPar.name,child:fPar.child,childRu:fPar.child,phone:fPar.phone,role:fPar.role}]);setFPar({name:"",child:"",phone:"",role:"parent"});setModal(null);};
-  const addPoll=()=>{const opts=fPoll.opts.filter(o=>o.trim());if(!fPoll.q.trim()||opts.length<2)return;setPolls(p=>[...p,{id:Date.now(),q:fPoll.q,qRu:fPoll.q,opts,optsRu:opts,votes:opts.map(()=>0),voted:null,active:true}]);setFPoll({q:"",opts:["","","",""]});setModal(null);};
+  const addPoll=()=>{const opts=fPoll.opts.filter(o=>o.trim());if(!fPoll.q.trim()||opts.length<2)return;setPolls(p=>[...p,{id:Date.now(),q:fPoll.q,qRu:fPoll.q,opts,optsRu:opts,votes:opts.map(()=>0),voted:null,active:true,deadline:fPoll.deadline||""}]);setFPoll({q:"",opts:["","","",""],deadline:""});setModal(null);};
   const addNeed=()=>{if(!fNeed.item.trim())return;setNeeds(p=>[...p,{id:Date.now(),item:fNeed.item,itemRu:fNeed.item,qty:fNeed.qty,desc:fNeed.desc,descRu:fNeed.desc,helpers:[],done:false}]);setFNeed({item:"",qty:"",desc:""});setModal(null);};
   const addHelp=()=>{if(!fHelp.desc.trim())return;const nm=fHelp.anon?(ua?"Анонімно":"Анонимно"):fHelp.name||user.name;setHelpReqs(p=>[{id:Date.now(),type:fHelp.type,anon:fHelp.anon,name:nm,nameRu:nm,desc:fHelp.desc,descRu:fHelp.desc,contact:fHelp.contact,date:today(),helpers:0},...p]);setFHelp({type:"food",anon:false,name:"",desc:"",contact:""});setModal(null);};
   const addTopSt=()=>{if(!fTopSt.name.trim()||!fTopSt.reason.trim())return;setTopSt(p=>[{id:Date.now(),name:fTopSt.name,nameRu:fTopSt.name,cat:fTopSt.cat,lvl:fTopSt.lvl,reason:fTopSt.reason,reasonRu:fTopSt.reason,date:today()},...p]);setFTopSt({name:"",cat:"grades",lvl:"gold",reason:""});setModal(null);};
   const addTopPar=()=>{if(!fTopPar.name.trim()||!fTopPar.reason.trim())return;setTopPar(p=>[{id:Date.now(),name:fTopPar.name,nameRu:fTopPar.name,cat:fTopPar.cat,reason:fTopPar.reason,reasonRu:fTopPar.reason,date:today()},...p]);setFTopPar({name:"",cat:"vol",reason:""});setModal(null);};
+
+  // docs CRUD
+  const addDoc=()=>{if(!fDoc.name.trim())return;setDocsData(p=>[...p,{id:Date.now(),icon:fDoc.icon,name:fDoc.name,nameRu:fDoc.name,content:fDoc.content,contentRu:fDoc.content,date:today()}]);setFDoc({icon:"📋",name:"",content:""});setModal(null);};
+  const saveDoc=()=>{if(!editDoc)return;setDocsData(p=>p.map(d=>d.id!==editDoc.id?d:{...d,icon:editDoc.icon,name:editDoc.name,nameRu:editDoc.name,content:editDoc.content,contentRu:editDoc.content}));setEditDoc(null);setModal(null);};
+  // teachers CRUD
+  const addTeacher=()=>{if(!fTeacher.n.trim())return;setTeachers(p=>[...p,{id:Date.now(),n:fTeacher.n,nRu:fTeacher.n,s:fTeacher.s,sRu:fTeacher.s,p:fTeacher.p}]);setFTeacher({n:"",s:"",p:""});setModal(null);};
+  const saveTeacher=()=>{if(!editTeacher)return;setTeachers(p=>p.map(tc=>tc.id!==editTeacher.id?tc:{...tc,n:editTeacher.n,nRu:editTeacher.n,s:editTeacher.s,sRu:editTeacher.s,p:editTeacher.p}));setEditTeacher(null);setModal(null);};
+  // schedule CRUD
+  const addSched=()=>{const ls=fSched.l.map(x=>x.trim()).filter(Boolean);if(!fSched.d.trim()||ls.length===0)return;setSchedule(p=>[...p,{id:Date.now(),d:fSched.d,l:ls}]);setFSched({d:"",l:["","","","",""]});setModal(null);};
+  const saveSched=()=>{if(editSchedIdx===null)return;const ls=schedule[editSchedIdx].l;setSchedule(p=>p.map((s,i)=>i!==editSchedIdx?s:{...s,l:ls}));setEditSchedIdx(null);setModal(null);};
+  // events delete
+  const delEv=id=>setEvents(p=>p.filter(e=>e.id!==id));
+  const saveEv=()=>{if(!editEv)return;setEvents(p=>p.map(e=>e.id!==editEv.id?e:{...e,title:editEv.title,titleRu:editEv.title,date:editEv.date,time:editEv.time,type:editEv.type}).sort((a,b)=>a.date.localeCompare(b.date)));setEditEv(null);setModal(null);};
+  // ann edit
+  const saveAnn=()=>{if(!editAnn)return;setAnn(p=>p.map(a=>a.id!==editAnn.id?a:{...a,title:editAnn.title,titleRu:editAnn.title,text:editAnn.text,textRu:editAnn.text}));setEditAnn(null);setModal(null);};
+  // parents edit
+  const savePar=()=>{if(!editPar)return;setParents(p=>p.map(x=>x.id!==editPar.id?x:{...x,phone:editPar.phone,comment:editPar.comment||"",name:canPost?editPar.name:x.name,child:canPost?editPar.child:x.child,role:canPost?editPar.role:x.role}));setEditPar(null);setModal(null);};
+  // needs edit/delete
+  const saveNeed=()=>{if(!editNeed)return;setNeeds(p=>p.map(n=>n.id!==editNeed.id?n:{...n,item:editNeed.item,itemRu:editNeed.item,qty:editNeed.qty,desc:editNeed.desc,descRu:editNeed.desc}));setEditNeed(null);setModal(null);};
+  // ann media upload
+  const handleMedia=e=>{const files=e.target.files;if(!files||!files.length)return;Array.from(files).forEach(f=>{const isVid=f.type.startsWith("video/");if(isVid){const url=URL.createObjectURL(f);setAnn(p=>[{id:Date.now()+Math.random(),title:ua?"Відео":"Видео",titleRu:"Видео",text:"",textRu:"",media:url,mediaType:"video",date:today(),author:user.name,pinned:false},...p]);}else{const rd=new FileReader();rd.onload=ev=>setAnn(p=>[{id:Date.now()+Math.random(),title:ua?"Фото":"Фото",titleRu:"Фото",text:"",textRu:"",media:ev.target.result,mediaType:"image",date:today(),author:user.name,pinned:false},...p]);rd.readAsDataURL(f);}});e.target.value="";};
 
   const togglePay=(cId,pId)=>setColls(p=>p.map(c=>c.id!==cId?c:{...c,payments:c.payments.map(pm=>pm.id!==pId?pm:{...pm,paid:!pm.paid})}));
   const joinVol=id=>setEvents(p=>p.map(e=>e.id!==id||e.vol.includes(user.name)?e:{...e,vol:[...e.vol,user.name]}));
@@ -419,7 +426,11 @@ function MainApp({lang,setLang,user}){
         <div>
           <div className="flex justify-between items-center mb-3">
             <h2 className="font-black text-slate-800 text-lg">{t.ann.title}</h2>
-            {canPost&&<Btn onClick={()=>setModal("ann")}>{t.ann.add}</Btn>}
+            {canPost&&<div className="flex gap-2">
+              <button onClick={()=>mediaRef.current&&mediaRef.current.click()} className="flex items-center gap-1 bg-pink-100 text-pink-700 hover:bg-pink-200 px-3 py-2 rounded-xl text-xs font-bold transition-colors">📎 {ua?"Медіа":"Медиа"}</button>
+              <input ref={mediaRef} type="file" accept="image/*,video/*" multiple className="hidden" onChange={handleMedia}/>
+              <Btn onClick={()=>setModal("ann")}>{t.ann.add}</Btn>
+            </div>}
           </div>
           {!canPost&&<div className="bg-amber-50 border border-amber-200 rounded-2xl p-3 mb-3 text-xs text-amber-700 font-medium">{t.ann.noAccess}</div>}
           {ann.length===0&&<Empty text={t.ann.noItems}/>}
@@ -433,10 +444,13 @@ function MainApp({lang,setLang,user}){
                     <h3 className="font-bold text-slate-900">{ua?a.title:a.titleRu}</h3>
                     {canPost&&<div className="flex gap-1 flex-shrink-0">
                       <button onClick={()=>setAnn(p=>p.map(x=>x.id===a.id?{...x,pinned:!x.pinned}:x))} className="w-7 h-7 flex items-center justify-center rounded-lg bg-slate-100 hover:bg-violet-100 text-slate-400 hover:text-violet-600 text-sm transition-colors">📌</button>
+                      <button onClick={()=>{setEditAnn({...a});setModal("editAnn");}} className="w-7 h-7 flex items-center justify-center rounded-lg bg-slate-100 hover:bg-blue-100 text-slate-400 hover:text-blue-500 text-sm transition-colors">✏️</button>
                       <button onClick={()=>setAnn(p=>p.filter(x=>x.id!==a.id))} className="w-7 h-7 flex items-center justify-center rounded-lg bg-slate-100 hover:bg-red-100 text-slate-400 hover:text-red-500 text-sm transition-colors">✕</button>
                     </div>}
                   </div>
-                  <p className="text-slate-600 text-sm mt-1.5 leading-relaxed">{ua?a.text:a.textRu}</p>
+                  {a.media&&a.mediaType==="image"&&<img src={a.media} alt="" className="w-full rounded-xl mt-2 object-cover max-h-60"/>}
+                  {a.media&&a.mediaType==="video"&&<video src={a.media} controls className="w-full rounded-xl mt-2 max-h-60" style={{maxHeight:"240px"}}/>}
+                  {(ua?a.text:a.textRu)&&<p className="text-slate-600 text-sm mt-1.5 leading-relaxed">{ua?a.text:a.textRu}</p>}
                   <div className="flex justify-between mt-3 pt-2.5 border-t border-slate-50 text-xs text-slate-400"><span>{a.author}</span><span>{a.date}</span></div>
                 </div>
               </div>
@@ -448,6 +462,13 @@ function MainApp({lang,setLang,user}){
               <Fld label={t.ann.fText}><textarea className={INP} rows={4} value={fAnn.text} onChange={e=>setFAnn(f=>({...f,text:e.target.value}))}/></Fld>
               <div className="flex gap-2 pt-1"><Btn cls="flex-1 text-center" onClick={addAnn}>{t.ann.pub}</Btn><Btn v="sec" onClick={()=>setModal(null)}>{t.common.cancel}</Btn></div>
             </div>
+          </Modal>
+          <Modal show={modal==="editAnn"} onClose={()=>{setModal(null);setEditAnn(null);}} title={ua?"Редагувати оголошення":"Редактировать объявление"}>
+            {editAnn&&<div className="space-y-3">
+              <Fld label={t.ann.fTitle}><input className={INP} value={editAnn.title} onChange={e=>setEditAnn(f=>({...f,title:e.target.value}))}/></Fld>
+              <Fld label={t.ann.fText}><textarea className={INP} rows={4} value={editAnn.text} onChange={e=>setEditAnn(f=>({...f,text:e.target.value}))}/></Fld>
+              <div className="flex gap-2 pt-1"><Btn cls="flex-1 text-center" onClick={saveAnn}>{ua?"Зберегти":"Сохранить"}</Btn><Btn v="sec" onClick={()=>{setModal(null);setEditAnn(null);}}>{t.common.cancel}</Btn></div>
+            </div>}
           </Modal>
         </div>
       )}
@@ -471,7 +492,8 @@ function MainApp({lang,setLang,user}){
           </div>
           {finTab==="coll"&&(
             <div>
-              <div className="flex justify-end mb-2"><Btn v="ghost" onClick={()=>setModal("col")}>{t.fin.newColl}</Btn></div>
+              {canFin&&<div className="flex justify-end mb-2"><Btn v="ghost" onClick={()=>setModal("col")}>{t.fin.newColl}</Btn></div>}
+              {!canFin&&colls.length===0&&<Empty text={ua?"Зборів поки немає":"Сборов пока нет"}/>}
               <div className="space-y-3">
                 {colls.map(col=>{
                   const pd=col.payments.filter(p=>p.paid).length;const pct=col.payments.length?Math.round(pd/col.payments.length*100):0;
@@ -491,9 +513,10 @@ function MainApp({lang,setLang,user}){
                           {col.payments.map(p=>(
                             <div key={p.id} className="flex items-center justify-between py-2">
                               <span className="text-sm text-slate-700">{ua?p.p:p.pRu}</span>
-                              <button onClick={()=>togglePay(col.id,p.id)} className={`text-xs px-3 py-1 rounded-full font-bold transition-colors ${p.paid?"bg-emerald-100 text-emerald-700 hover:bg-emerald-200":"bg-slate-100 text-slate-500 hover:bg-slate-200"}`}>
-                                {p.paid?t.fin.paid:t.fin.notPaid}
-                              </button>
+                              {canFin
+                                ?<button onClick={()=>togglePay(col.id,p.id)} className={`text-xs px-3 py-1 rounded-full font-bold transition-colors ${p.paid?"bg-emerald-100 text-emerald-700 hover:bg-emerald-200":"bg-slate-100 text-slate-500 hover:bg-slate-200"}`}>{p.paid?t.fin.paid:t.fin.notPaid}</button>
+                                :<span className={`text-xs px-3 py-1 rounded-full font-bold ${p.paid?"bg-emerald-100 text-emerald-700":"bg-slate-100 text-slate-500"}`}>{p.paid?t.fin.paid:t.fin.notPaid}</span>
+                              }
                             </div>
                           ))}
                         </div>
@@ -506,12 +529,15 @@ function MainApp({lang,setLang,user}){
           )}
           {finTab==="exp"&&(
             <div>
-              <div className="flex justify-end mb-2"><Btn v="ghost" onClick={()=>setModal("exp")}>{t.fin.addExp}</Btn></div>
+              {canFin&&<div className="flex justify-end mb-2"><Btn v="ghost" onClick={()=>setModal("exp")}>{t.fin.addExp}</Btn></div>}
               <div className="card">
                 {exps.map((e,i)=>(
                   <div key={e.id} className={`flex items-center justify-between p-4 ${i>0?"border-t border-slate-50":""}`}>
                     <div><p className="font-semibold text-slate-800 text-sm">{ua?e.desc:e.descRu}</p><p className="text-xs text-slate-400">{e.date}</p></div>
-                    <span className="font-black text-red-500">−{e.amount.toLocaleString()} {t.cur}</span>
+                    <div className="flex items-center gap-2">
+                      <span className="font-black text-red-500">−{e.amount.toLocaleString()} {t.cur}</span>
+                      {canFin&&<button onClick={()=>setExps(p=>p.filter(x=>x.id!==e.id))} className="w-6 h-6 flex items-center justify-center rounded-lg bg-slate-100 hover:bg-red-100 text-slate-400 hover:text-red-500 text-xs transition-colors">✕</button>}
+                    </div>
                   </div>
                 ))}
               </div>
@@ -529,13 +555,16 @@ function MainApp({lang,setLang,user}){
       {/* ─── ПОДІЇ ─────────────────────────────────────────────────── */}
       {tab==="ev"&&(
         <div>
-          <div className="flex justify-between items-center mb-3"><h2 className="font-black text-slate-800 text-lg">{t.ev.title}</h2><Btn onClick={()=>setModal("ev")}>{t.ev.add}</Btn></div>
-          {upEv.length>0&&<><SL>{t.ev.up}</SL><div className="space-y-3 mb-2">{upEv.map(ev=>{const s=EVT_S[ev.type]||EVT_S.other;const joined=ev.vol.includes(user.name);return(<div key={ev.id} className="card"><div className={`h-1.5 ${s.dot}`}/><div className="card-inner"><div className="flex items-start gap-3"><div className={`w-2.5 h-2.5 rounded-full mt-1 flex-shrink-0 ${s.dot}`}/><div className="flex-1"><h3 className="font-bold text-slate-900">{ua?ev.title:ev.titleRu}</h3><p className="text-xs text-slate-500 mt-0.5">{ev.date}{ev.time?` · ${ev.time}`:""}</p><span className={`inline-block mt-1.5 text-xs font-bold px-2.5 py-1 rounded-full ${s.bg} ${s.text}`}>{t.ev.types[ev.type]}</span></div></div>{ev.type!=="birthday"&&<div className="mt-3 pt-3 border-t border-slate-50 flex items-center justify-between"><p className="text-xs text-slate-400">{t.ev.vol}: {ev.vol.length>0?ev.vol.join(", "):t.ev.noVol}</p><button onClick={()=>joinVol(ev.id)} disabled={joined} className={`text-xs font-bold px-3 py-1.5 rounded-xl transition-all ${joined?"bg-emerald-100 text-emerald-700":"bg-violet-100 text-violet-700 hover:bg-violet-200"}`}>{joined?t.ev.joined:t.ev.join}</button></div>}</div></div>);})}</div></>}
+          <div className="flex justify-between items-center mb-3"><h2 className="font-black text-slate-800 text-lg">{t.ev.title}</h2>{canPost&&<Btn onClick={()=>setModal("ev")}>{t.ev.add}</Btn>}</div>
+          {upEv.length>0&&<><SL>{t.ev.up}</SL><div className="space-y-3 mb-2">{upEv.map(ev=>{const s=EVT_S[ev.type]||EVT_S.other;const joined=ev.vol.includes(user.name);return(<div key={ev.id} className="card"><div className={`h-1.5 ${s.dot}`}/><div className="card-inner"><div className="flex items-start gap-3"><div className={`w-2.5 h-2.5 rounded-full mt-1 flex-shrink-0 ${s.dot}`}/><div className="flex-1"><h3 className="font-bold text-slate-900">{ua?ev.title:ev.titleRu}</h3><p className="text-xs text-slate-500 mt-0.5">{ev.date}{ev.time?` · ${ev.time}`:""}</p><span className={`inline-block mt-1.5 text-xs font-bold px-2.5 py-1 rounded-full ${s.bg} ${s.text}`}>{t.ev.types[ev.type]}</span></div>{canPost&&<div className="flex gap-1 flex-shrink-0"><button onClick={()=>{setEditEv({...ev});setModal("editEv");}} className="w-7 h-7 flex items-center justify-center rounded-lg bg-slate-100 hover:bg-blue-100 text-slate-400 hover:text-blue-500 text-sm transition-colors">✏️</button><button onClick={()=>delEv(ev.id)} className="w-7 h-7 flex items-center justify-center rounded-lg bg-slate-100 hover:bg-red-100 text-slate-400 hover:text-red-500 text-sm transition-colors">✕</button></div>}</div>{ev.type!=="birthday"&&<div className="mt-3 pt-3 border-t border-slate-50 flex items-center justify-between"><p className="text-xs text-slate-400">{t.ev.vol}: {ev.vol.length>0?ev.vol.join(", "):t.ev.noVol}</p><button onClick={()=>joinVol(ev.id)} disabled={joined} className={`text-xs font-bold px-3 py-1.5 rounded-xl transition-all ${joined?"bg-emerald-100 text-emerald-700":"bg-violet-100 text-violet-700 hover:bg-violet-200"}`}>{joined?t.ev.joined:t.ev.join}</button></div>}</div></div>);})}</div></>}
           {pastEv.length>0&&<><SL>{t.ev.past}</SL><div className="space-y-2 mb-2">{pastEv.map(ev=>{const s=EVT_S[ev.type]||EVT_S.other;return(<div key={ev.id} className="card opacity-60"><div className="card-inner flex items-center gap-3 py-3"><div className={`w-2 h-2 rounded-full flex-shrink-0 ${s.dot}`}/><div className="flex-1"><p className="text-sm font-semibold text-slate-700">{ua?ev.title:ev.titleRu}</p><p className="text-xs text-slate-400">{ev.date}</p></div><span className={`text-xs font-bold px-2 py-0.5 rounded-full ${s.bg} ${s.text}`}>{t.ev.types[ev.type]}</span></div></div>);})}</div></>}
           <SL>{t.ev.bdays}</SL>
           <div className="card"><div className="card-inner p-0">{BDAYS.map((b,i)=>{const d=daysUntil(b.d);return(<div key={i} className={`flex items-center justify-between p-4 ${i>0?"border-t border-slate-50":""}`}><div><p className="font-semibold text-slate-800 text-sm">{ua?b.n:b.nRu}</p><p className="text-xs text-slate-400">{b.d}</p></div><span className={`text-xs font-bold px-3 py-1 rounded-full ${d===0?"bg-rose-100 text-rose-600":d<=7?"bg-amber-100 text-amber-700":"bg-slate-100 text-slate-500"}`}>{d===0?t.ev.today:d>0?t.ev.inDays.replace("{n}",d):t.ev.passed}</span></div>);})}</div></div>
           <Modal show={modal==="ev"} onClose={()=>setModal(null)} title={t.ev.newEv}>
             <div className="space-y-3"><Fld label={ua?"Назва":"Название"}><input className={INP} value={fEv.title} onChange={e=>setFEv(f=>({...f,title:e.target.value}))}/></Fld><div className="grid grid-cols-2 gap-2"><Fld label="Дата"><input className={INP} type="date" value={fEv.date} onChange={e=>setFEv(f=>({...f,date:e.target.value}))}/></Fld><Fld label="Час"><input className={INP} type="time" value={fEv.time} onChange={e=>setFEv(f=>({...f,time:e.target.value}))}/></Fld></div><Fld label="Тип"><select className={INP} value={fEv.type} onChange={e=>setFEv(f=>({...f,type:e.target.value}))}>{Object.entries(t.ev.types).map(([k,v])=><option key={k} value={k}>{v}</option>)}</select></Fld><div className="flex gap-2 pt-1"><Btn cls="flex-1 text-center" onClick={addEv}>{t.common.add}</Btn><Btn v="sec" onClick={()=>setModal(null)}>{t.common.cancel}</Btn></div></div>
+          </Modal>
+          <Modal show={modal==="editEv"} onClose={()=>{setModal(null);setEditEv(null);}} title={ua?"Редагувати захід":"Редактировать событие"}>
+            {editEv&&<div className="space-y-3"><Fld label={ua?"Назва":"Название"}><input className={INP} value={editEv.title} onChange={e=>setEditEv(f=>({...f,title:e.target.value}))}/></Fld><div className="grid grid-cols-2 gap-2"><Fld label="Дата"><input className={INP} type="date" value={editEv.date} onChange={e=>setEditEv(f=>({...f,date:e.target.value}))}/></Fld><Fld label="Час"><input className={INP} type="time" value={editEv.time} onChange={e=>setEditEv(f=>({...f,time:e.target.value}))}/></Fld></div><Fld label="Тип"><select className={INP} value={editEv.type} onChange={e=>setEditEv(f=>({...f,type:e.target.value}))}>{Object.entries(t.ev.types).map(([k,v])=><option key={k} value={k}>{v}</option>)}</select></Fld><div className="flex gap-2 pt-1"><Btn cls="flex-1 text-center" onClick={saveEv}>{ua?"Зберегти":"Сохранить"}</Btn><Btn v="sec" onClick={()=>{setModal(null);setEditEv(null);}}>{t.common.cancel}</Btn></div></div>}
           </Modal>
         </div>
       )}
@@ -545,11 +574,20 @@ function MainApp({lang,setLang,user}){
         <div>
           <div className="flex justify-between items-center mb-3"><h2 className="font-black text-slate-800 text-lg">{t.par.title} ({parents.length})</h2><Btn onClick={()=>setModal("par")}>{t.par.add}</Btn></div>
           <input className={`${INP} mb-3`} placeholder={t.par.search} value={psearch} onChange={e=>setPsearch(e.target.value)}/>
-          {filtPar.filter(p=>p.role!=="parent").length>0&&<><SL>{t.par.comm}</SL><div className="space-y-2 mb-2">{filtPar.filter(p=>p.role!=="parent").map(p=><div key={p.id} className="card"><div className="h-1 grad-violet"/><div className="card-inner flex items-center gap-3"><Av name={ua?p.name:p.nameRu} sz="md"/><div className="flex-1"><p className="font-bold text-slate-900 text-sm">{ua?p.name:p.nameRu}</p><p className="text-xs text-slate-500">{ua?p.child:p.childRu} · {p.phone}</p></div><span className="text-xs font-bold px-2.5 py-1 rounded-full bg-violet-100 text-violet-700">{t.roles[p.role]}</span></div></div>)}</div></>}
+          {filtPar.filter(p=>p.role!=="parent").length>0&&<><SL>{t.par.comm}</SL><div className="space-y-2 mb-2">{filtPar.filter(p=>p.role!=="parent").map(p=>{const isOwn=p.id===user.id||p.name===user.name;return(<div key={p.id} className="card"><div className="h-1 grad-violet"/><div className="card-inner flex items-center gap-3"><Av name={ua?p.name:p.nameRu} sz="md"/><div className="flex-1"><p className="font-bold text-slate-900 text-sm">{ua?p.name:p.nameRu}</p><p className="text-xs text-slate-500">{ua?p.child:p.childRu} · {p.phone}</p>{p.comment&&<p className="text-xs text-slate-400 mt-0.5 italic">{p.comment}</p>}</div><div className="flex items-center gap-1"><span className="text-xs font-bold px-2.5 py-1 rounded-full bg-violet-100 text-violet-700">{t.roles[p.role]}</span>{(canPost||isOwn)&&<button onClick={()=>{setEditPar({...p,comment:p.comment||""});setModal("editPar");}} className="w-7 h-7 flex items-center justify-center rounded-lg bg-slate-100 hover:bg-blue-100 text-slate-400 hover:text-blue-500 text-sm transition-colors">✏️</button>}{canPost&&<button onClick={()=>setParents(x=>x.filter(q=>q.id!==p.id))} className="w-7 h-7 flex items-center justify-center rounded-lg bg-slate-100 hover:bg-red-100 text-slate-400 hover:text-red-500 text-sm transition-colors">✕</button>}</div></div></div>);})}</div></>}
           <SL>{t.par.all}</SL>
-          <div className="space-y-2">{filtPar.filter(p=>p.role==="parent").map(p=><div key={p.id} className="card"><div className="card-inner flex items-center gap-3 py-3"><Av name={ua?p.name:p.nameRu} sz="sm"/><div><p className="font-semibold text-slate-800 text-sm">{ua?p.name:p.nameRu}</p><p className="text-xs text-slate-500">{ua?p.child:p.childRu} · {p.phone}</p></div></div></div>)}</div>
+          <div className="space-y-2">{filtPar.filter(p=>p.role==="parent").map(p=>{const isOwn=p.id===user.id||p.name===user.name;return(<div key={p.id} className="card"><div className="card-inner flex items-center gap-3 py-3"><Av name={ua?p.name:p.nameRu} sz="sm"/><div className="flex-1"><p className="font-semibold text-slate-800 text-sm">{ua?p.name:p.nameRu}</p><p className="text-xs text-slate-500">{ua?p.child:p.childRu} · {p.phone}</p>{p.comment&&<p className="text-xs text-slate-400 mt-0.5 italic">{p.comment}</p>}</div><div className="flex gap-1">{(canPost||isOwn)&&<button onClick={()=>{setEditPar({...p,comment:p.comment||""});setModal("editPar");}} className="w-7 h-7 flex items-center justify-center rounded-lg bg-slate-100 hover:bg-blue-100 text-slate-400 hover:text-blue-500 text-sm transition-colors">✏️</button>}{canPost&&<button onClick={()=>setParents(x=>x.filter(q=>q.id!==p.id))} className="w-7 h-7 flex items-center justify-center rounded-lg bg-slate-100 hover:bg-red-100 text-slate-400 hover:text-red-500 text-sm transition-colors">✕</button>}</div></div></div>);})}</div>
           <Modal show={modal==="par"} onClose={()=>setModal(null)} title={t.par.add}>
             <div className="space-y-3"><Fld label={t.par.pName}><input className={INP} value={fPar.name} onChange={e=>setFPar(f=>({...f,name:e.target.value}))}/></Fld><Fld label={t.par.cName}><input className={INP} value={fPar.child} onChange={e=>setFPar(f=>({...f,child:e.target.value}))}/></Fld><Fld label={t.par.phone}><input className={INP} value={fPar.phone} onChange={e=>setFPar(f=>({...f,phone:e.target.value}))}/></Fld><Fld label={t.par.role}><select className={INP} value={fPar.role} onChange={e=>setFPar(f=>({...f,role:e.target.value}))}>{Object.entries(t.roles).map(([k,v])=><option key={k} value={k}>{v}</option>)}</select></Fld><div className="flex gap-2 pt-1"><Btn cls="flex-1 text-center" onClick={addPar}>{t.common.add}</Btn><Btn v="sec" onClick={()=>setModal(null)}>{t.common.cancel}</Btn></div></div>
+          </Modal>
+          <Modal show={modal==="editPar"} onClose={()=>{setModal(null);setEditPar(null);}} title={ua?"Редагувати батьків":"Редактировать родителя"}>
+            {editPar&&<div className="space-y-3">
+              {canPost&&<><Fld label={t.par.pName}><input className={INP} value={editPar.name} onChange={e=>setEditPar(f=>({...f,name:e.target.value}))}/></Fld><Fld label={t.par.cName}><input className={INP} value={editPar.child} onChange={e=>setEditPar(f=>({...f,child:e.target.value}))}/></Fld></>}
+              <Fld label={t.par.phone}><input className={INP} value={editPar.phone} onChange={e=>setEditPar(f=>({...f,phone:e.target.value}))}/></Fld>
+              <Fld label={ua?"Коментар":"Комментарий"}><input className={INP} placeholder={ua?"Додати коментар...":"Добавить комментарий..."} value={editPar.comment||""} onChange={e=>setEditPar(f=>({...f,comment:e.target.value}))}/></Fld>
+              {canPost&&<Fld label={t.par.role}><select className={INP} value={editPar.role} onChange={e=>setEditPar(f=>({...f,role:e.target.value}))}>{Object.entries(t.roles).map(([k,v])=><option key={k} value={k}>{v}</option>)}</select></Fld>}
+              <div className="flex gap-2 pt-1"><Btn cls="flex-1 text-center" onClick={savePar}>{ua?"Зберегти":"Сохранить"}</Btn><Btn v="sec" onClick={()=>{setModal(null);setEditPar(null);}}>{t.common.cancel}</Btn></div>
+            </div>}
           </Modal>
         </div>
       )}
@@ -585,15 +623,25 @@ function MainApp({lang,setLang,user}){
                     </div>
                     <div className="flex justify-between items-center mt-4 pt-3 border-t border-slate-50 text-xs text-slate-400">
                       <span>{t.pol.total}: {total}</span>
-                      {poll.voted===null&&poll.active?<span className="text-violet-500 font-semibold">{t.pol.hint}</span>:<span className="text-emerald-600 font-semibold">{t.pol.voted}</span>}
+                      <div className="flex items-center gap-2">
+                        {poll.deadline&&<span>⏰ {poll.deadline}</span>}
+                        {canPost&&<button onClick={()=>setPolls(p=>p.map(x=>x.id===poll.id?{...x,active:!x.active}:x))} className="px-2 py-1 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-500 transition-colors">{poll.active?(ua?"Закрити":"Закрыть"):(ua?"Відкрити":"Открыть")}</button>}
+                        {canPost&&<button onClick={()=>setPolls(p=>p.filter(x=>x.id!==poll.id))} className="w-6 h-6 flex items-center justify-center rounded-lg bg-slate-100 hover:bg-red-100 text-slate-400 hover:text-red-500 transition-colors">✕</button>}
+                      </div>
                     </div>
+                    {poll.voted===null&&poll.active?<p className="text-xs text-violet-500 font-semibold mt-2">{t.pol.hint}</p>:poll.voted!==null?<p className="text-xs text-emerald-600 font-semibold mt-2">{t.pol.voted}</p>:null}
                   </div>
                 </div>
               );
             })}
           </div>
           <Modal show={modal==="poll"} onClose={()=>setModal(null)} title={t.pol.create}>
-            <div className="space-y-3"><Fld label={t.pol.q}><input className={INP} value={fPoll.q} onChange={e=>setFPoll(f=>({...f,q:e.target.value}))}/></Fld>{fPoll.opts.map((o,i)=><Fld key={i} label={`Варіант ${i+1}${i<2?" *":""}`}><input className={INP} value={o} onChange={e=>{const a=[...fPoll.opts];a[i]=e.target.value;setFPoll(f=>({...f,opts:a}));}} /></Fld>)}<div className="flex gap-2 pt-1"><Btn cls="flex-1 text-center" onClick={addPoll}>{t.pol.create}</Btn><Btn v="sec" onClick={()=>setModal(null)}>{t.common.cancel}</Btn></div></div>
+            <div className="space-y-3">
+              <Fld label={t.pol.q}><input className={INP} value={fPoll.q} onChange={e=>setFPoll(f=>({...f,q:e.target.value}))}/></Fld>
+              {fPoll.opts.map((o,i)=><Fld key={i} label={`${ua?"Варіант":"Вариант"} ${i+1}${i<2?" *":""}`}><input className={INP} value={o} onChange={e=>{const a=[...fPoll.opts];a[i]=e.target.value;setFPoll(f=>({...f,opts:a}));}} /></Fld>)}
+              <Fld label={ua?"Дедлайн голосування (необов'язково)":"Срок голосования (необязательно)"}><input className={INP} type="datetime-local" value={fPoll.deadline} onChange={e=>setFPoll(f=>({...f,deadline:e.target.value}))}/></Fld>
+              <div className="flex gap-2 pt-1"><Btn cls="flex-1 text-center" onClick={addPoll}>{t.pol.create}</Btn><Btn v="sec" onClick={()=>setModal(null)}>{t.common.cancel}</Btn></div>
+            </div>
           </Modal>
         </div>
       )}
@@ -601,23 +649,117 @@ function MainApp({lang,setLang,user}){
       {/* ─── ДОКУМЕНТИ ───────────────────────────────────────────────── */}
       {tab==="doc"&&(
         <div>
-          <h2 className="font-black text-slate-800 text-lg mb-3">{t.doc.title}</h2>
+          <div className="flex justify-between items-center mb-3">
+            <h2 className="font-black text-slate-800 text-lg">{t.doc.title}</h2>
+            {canPost&&<Btn onClick={()=>setModal("addDoc")}>{t.common.add}</Btn>}
+          </div>
+          {docsData.length===0&&<Empty text={ua?"Документів поки немає":"Документов пока нет"}/>}
           <div className="card mb-4">
-            {DOCS_DATA.map((doc,i)=>(
+            {docsData.map((doc,i)=>(
               <div key={doc.id} className={i>0?"border-t border-slate-100":""}>
-                <button onClick={()=>setDocOpen(p=>({...p,[doc.id]:!p[doc.id]}))} className="w-full flex items-center gap-3 p-4 hover:bg-slate-50 transition-colors text-left">
-                  <span className="text-xl w-8 text-center flex-shrink-0">{doc.icon}</span>
-                  <div className="flex-1 min-w-0"><p className="font-semibold text-slate-800 text-sm">{ua?doc.name:doc.nameRu}</p><p className="text-xs text-slate-400">{doc.date}</p></div>
-                  <span className={`text-slate-400 text-sm flex-shrink-0 chevron ${docOpen[doc.id]?"open":""}`}>▼</span>
-                </button>
+                <div className="flex items-center">
+                  <button onClick={()=>setDocOpen(p=>({...p,[doc.id]:!p[doc.id]}))} className="flex-1 flex items-center gap-3 p-4 hover:bg-slate-50 transition-colors text-left">
+                    <span className="text-xl w-8 text-center flex-shrink-0">{doc.icon}</span>
+                    <div className="flex-1 min-w-0"><p className="font-semibold text-slate-800 text-sm">{ua?doc.name:doc.nameRu}</p><p className="text-xs text-slate-400">{doc.date}</p></div>
+                    <span className={`text-slate-400 text-sm flex-shrink-0 chevron ${docOpen[doc.id]?"open":""}`}>▼</span>
+                  </button>
+                  {canPost&&<div className="flex gap-1 pr-3">
+                    <button onClick={()=>{setEditDoc({...doc});setModal("editDoc");}} className="w-7 h-7 flex items-center justify-center rounded-lg bg-slate-100 hover:bg-blue-100 text-slate-400 hover:text-blue-500 text-sm transition-colors">✏️</button>
+                    <button onClick={()=>setDocsData(p=>p.filter(x=>x.id!==doc.id))} className="w-7 h-7 flex items-center justify-center rounded-lg bg-slate-100 hover:bg-red-100 text-slate-400 hover:text-red-500 text-sm transition-colors">✕</button>
+                  </div>}
+                </div>
                 {docOpen[doc.id]&&<div className="px-4 pb-4 border-t border-slate-100 bg-slate-50"><pre className="pre text-xs text-slate-700 leading-relaxed pt-3 overflow-x-auto">{ua?doc.content:doc.contentRu}</pre></div>}
               </div>
             ))}
           </div>
-          <SL>{t.doc.teach}</SL>
-          <div className="card mb-4">{TEACHERS.map((tc,i)=><div key={i} className={`flex items-center gap-3 p-4 ${i>0?"border-t border-slate-50":""}`}><Av name={ua?tc.n:tc.nRu} sz="sm"/><div><p className="font-semibold text-slate-800 text-sm">{ua?tc.n:tc.nRu}</p><p className="text-xs text-slate-500">{ua?tc.s:tc.sRu}</p><p className="text-xs text-slate-400">{tc.p}</p></div></div>)}</div>
-          <SL>{t.doc.sched}</SL>
-          <div className="card">{SCHEDULE.map((d,i)=><div key={i} className={`flex items-start gap-3 p-3 ${i%2===0?"bg-violet-50/50":""} ${i>0?"border-t border-slate-100":""}`}><span className="text-xs font-black text-violet-600 w-5 mt-1 flex-shrink-0">{d.d}</span><div className="flex flex-wrap gap-1">{d.l.map((l,j)=><span key={j} className="text-xs bg-white border border-slate-200 text-slate-700 px-2 py-1 rounded-lg shadow-sm">{j+1}. {l}</span>)}</div></div>)}</div>
+
+          <div className="flex justify-between items-center mb-2">
+            <SL>{t.doc.teach}</SL>
+            {canPost&&<button onClick={()=>setModal("addTeacher")} className="text-xs text-violet-600 font-bold hover:underline">+ {ua?"Додати":"Добавить"}</button>}
+          </div>
+          <div className="card mb-4">
+            {teachers.length===0&&<div className="p-4 text-center text-slate-400 text-sm">{ua?"Склад не заповнений":"Состав не заполнен"}</div>}
+            {teachers.map((tc,i)=>(
+              <div key={tc.id||i} className={`flex items-center gap-3 p-4 ${i>0?"border-t border-slate-50":""}`}>
+                <Av name={ua?tc.n:tc.nRu} sz="sm"/>
+                <div className="flex-1">
+                  <p className="font-semibold text-slate-800 text-sm">{ua?tc.n:tc.nRu}</p>
+                  <p className="text-xs text-slate-500">{ua?tc.s:tc.sRu}</p>
+                  <p className="text-xs text-slate-400">{tc.p}</p>
+                </div>
+                {canPost&&<div className="flex gap-1">
+                  <button onClick={()=>{setEditTeacher({...tc});setModal("editTeacher");}} className="w-7 h-7 flex items-center justify-center rounded-lg bg-slate-100 hover:bg-blue-100 text-slate-400 hover:text-blue-500 text-sm transition-colors">✏️</button>
+                  <button onClick={()=>setTeachers(p=>p.filter(x=>x.id!==tc.id))} className="w-7 h-7 flex items-center justify-center rounded-lg bg-slate-100 hover:bg-red-100 text-slate-400 hover:text-red-500 text-sm transition-colors">✕</button>
+                </div>}
+              </div>
+            ))}
+          </div>
+
+          <div className="flex justify-between items-center mb-2">
+            <SL>{t.doc.sched}</SL>
+            {canSched&&<button onClick={()=>setModal("addSched")} className="text-xs text-violet-600 font-bold hover:underline">+ {ua?"Додати день":"Добавить день"}</button>}
+          </div>
+          <div className="card">
+            {schedule.length===0&&<div className="p-4 text-center text-slate-400 text-sm">{ua?"Розклад не заповнений":"Расписание не заполнено"}</div>}
+            {schedule.map((d,i)=>(
+              <div key={d.id||i} className={`flex items-start gap-3 p-3 ${i%2===0?"bg-violet-50/50":""} ${i>0?"border-t border-slate-100":""}`}>
+                <span className="text-xs font-black text-violet-600 w-5 mt-1 flex-shrink-0">{d.d}</span>
+                <div className="flex flex-wrap gap-1 flex-1">{d.l.map((l,j)=><span key={j} className="text-xs bg-white border border-slate-200 text-slate-700 px-2 py-1 rounded-lg shadow-sm">{j+1}. {l}</span>)}</div>
+                {canSched&&<div className="flex gap-1 flex-shrink-0">
+                  <button onClick={()=>{setEditSchedIdx(i);setSchedule(p=>p.map((s,si)=>si!==i?s:{...s}));setModal("editSched");}} className="w-7 h-7 flex items-center justify-center rounded-lg bg-slate-100 hover:bg-blue-100 text-slate-400 hover:text-blue-500 text-xs transition-colors">✏️</button>
+                  <button onClick={()=>setSchedule(p=>p.filter((_,si)=>si!==i))} className="w-7 h-7 flex items-center justify-center rounded-lg bg-slate-100 hover:bg-red-100 text-slate-400 hover:text-red-500 text-xs transition-colors">✕</button>
+                </div>}
+              </div>
+            ))}
+          </div>
+
+          {/* Doc modals */}
+          <Modal show={modal==="addDoc"} onClose={()=>setModal(null)} title={ua?"Новий документ":"Новый документ"}>
+            <div className="space-y-3">
+              <Fld label={ua?"Іконка":"Иконка"}><input className={INP} value={fDoc.icon} onChange={e=>setFDoc(f=>({...f,icon:e.target.value}))}/></Fld>
+              <Fld label={ua?"Назва":"Название"}><input className={INP} value={fDoc.name} onChange={e=>setFDoc(f=>({...f,name:e.target.value}))}/></Fld>
+              <Fld label={ua?"Вміст":"Содержимое"}><textarea className={INP} rows={6} value={fDoc.content} onChange={e=>setFDoc(f=>({...f,content:e.target.value}))}/></Fld>
+              <div className="flex gap-2 pt-1"><Btn cls="flex-1 text-center" onClick={addDoc}>{t.common.add}</Btn><Btn v="sec" onClick={()=>setModal(null)}>{t.common.cancel}</Btn></div>
+            </div>
+          </Modal>
+          <Modal show={modal==="editDoc"} onClose={()=>{setModal(null);setEditDoc(null);}} title={ua?"Редагувати документ":"Редактировать документ"}>
+            {editDoc&&<div className="space-y-3">
+              <Fld label={ua?"Іконка":"Иконка"}><input className={INP} value={editDoc.icon} onChange={e=>setEditDoc(f=>({...f,icon:e.target.value}))}/></Fld>
+              <Fld label={ua?"Назва":"Название"}><input className={INP} value={editDoc.name} onChange={e=>setEditDoc(f=>({...f,name:e.target.value}))}/></Fld>
+              <Fld label={ua?"Вміст":"Содержимое"}><textarea className={INP} rows={6} value={editDoc.content} onChange={e=>setEditDoc(f=>({...f,content:e.target.value}))}/></Fld>
+              <div className="flex gap-2 pt-1"><Btn cls="flex-1 text-center" onClick={saveDoc}>{ua?"Зберегти":"Сохранить"}</Btn><Btn v="sec" onClick={()=>{setModal(null);setEditDoc(null);}}>{t.common.cancel}</Btn></div>
+            </div>}
+          </Modal>
+          <Modal show={modal==="addTeacher"} onClose={()=>setModal(null)} title={ua?"Додати педагога":"Добавить педагога"}>
+            <div className="space-y-3">
+              <Fld label={ua?"ПІБ":"ФИО"}><input className={INP} value={fTeacher.n} onChange={e=>setFTeacher(f=>({...f,n:e.target.value}))}/></Fld>
+              <Fld label={ua?"Предмет / роль":"Предмет / роль"}><input className={INP} value={fTeacher.s} onChange={e=>setFTeacher(f=>({...f,s:e.target.value}))}/></Fld>
+              <Fld label={ua?"Телефон":"Телефон"}><input className={INP} value={fTeacher.p} onChange={e=>setFTeacher(f=>({...f,p:e.target.value}))}/></Fld>
+              <div className="flex gap-2 pt-1"><Btn cls="flex-1 text-center" onClick={addTeacher}>{t.common.add}</Btn><Btn v="sec" onClick={()=>setModal(null)}>{t.common.cancel}</Btn></div>
+            </div>
+          </Modal>
+          <Modal show={modal==="editTeacher"} onClose={()=>{setModal(null);setEditTeacher(null);}} title={ua?"Редагувати педагога":"Редактировать педагога"}>
+            {editTeacher&&<div className="space-y-3">
+              <Fld label={ua?"ПІБ":"ФИО"}><input className={INP} value={editTeacher.n} onChange={e=>setEditTeacher(f=>({...f,n:e.target.value}))}/></Fld>
+              <Fld label={ua?"Предмет / роль":"Предмет / роль"}><input className={INP} value={editTeacher.s} onChange={e=>setEditTeacher(f=>({...f,s:e.target.value}))}/></Fld>
+              <Fld label={ua?"Телефон":"Телефон"}><input className={INP} value={editTeacher.p} onChange={e=>setEditTeacher(f=>({...f,p:e.target.value}))}/></Fld>
+              <div className="flex gap-2 pt-1"><Btn cls="flex-1 text-center" onClick={saveTeacher}>{ua?"Зберегти":"Сохранить"}</Btn><Btn v="sec" onClick={()=>{setModal(null);setEditTeacher(null);}}>{t.common.cancel}</Btn></div>
+            </div>}
+          </Modal>
+          <Modal show={modal==="addSched"} onClose={()=>setModal(null)} title={ua?"Додати день розкладу":"Добавить день расписания"}>
+            <div className="space-y-3">
+              <Fld label={ua?"День тижня":"День недели"}><input className={INP} placeholder={ua?"Пн":"Пн"} value={fSched.d} onChange={e=>setFSched(f=>({...f,d:e.target.value}))}/></Fld>
+              {fSched.l.map((l,i)=><Fld key={i} label={`${ua?"Урок":"Урок"} ${i+1}`}><input className={INP} value={l} onChange={e=>{const a=[...fSched.l];a[i]=e.target.value;setFSched(f=>({...f,l:a}));}} /></Fld>)}
+              <div className="flex gap-2 pt-1"><Btn cls="flex-1 text-center" onClick={addSched}>{t.common.add}</Btn><Btn v="sec" onClick={()=>setModal(null)}>{t.common.cancel}</Btn></div>
+            </div>
+          </Modal>
+          <Modal show={modal==="editSched"} onClose={()=>{setModal(null);setEditSchedIdx(null);}} title={ua?"Редагувати розклад":"Редактировать расписание"}>
+            {editSchedIdx!==null&&schedule[editSchedIdx]&&<div className="space-y-3">
+              <Fld label={ua?"День тижня":"День недели"}><input className={INP} value={schedule[editSchedIdx].d} onChange={e=>setSchedule(p=>p.map((s,si)=>si!==editSchedIdx?s:{...s,d:e.target.value}))}/></Fld>
+              {schedule[editSchedIdx].l.map((l,i)=><Fld key={i} label={`${ua?"Урок":"Урок"} ${i+1}`}><input className={INP} value={l} onChange={e=>{setSchedule(p=>p.map((s,si)=>{if(si!==editSchedIdx)return s;const nl=[...s.l];nl[i]=e.target.value;return{...s,l:nl};}));}} /></Fld>)}
+              <div className="flex gap-2 pt-1"><Btn cls="flex-1 text-center" onClick={saveSched}>{ua?"Зберегти":"Сохранить"}</Btn><Btn v="sec" onClick={()=>{setModal(null);setEditSchedIdx(null);}}>{t.common.cancel}</Btn></div>
+            </div>}
+          </Modal>
         </div>
       )}
 
@@ -659,9 +801,8 @@ function MainApp({lang,setLang,user}){
         <div>
           <div className="flex justify-between items-center mb-3">
             <h2 className="font-black text-slate-800 text-lg">{t.needs.title}</h2>
-            {canMgr?<Btn onClick={()=>setModal("need")}>{t.needs.add}</Btn>:<span className="text-xs text-amber-600 bg-amber-50 px-3 py-1.5 rounded-xl font-medium">🔒</span>}
+            {canPost?<Btn onClick={()=>setModal("need")}>{t.needs.add}</Btn>:<span className="text-xs text-amber-600 bg-amber-50 px-3 py-1.5 rounded-xl font-medium">🔒</span>}
           </div>
-          {!canMgr&&<div className="bg-amber-50 border border-amber-200 rounded-2xl p-3 mb-3 text-xs text-amber-700 font-medium">{t.needs.noAccess}</div>}
           {needs.length===0&&<Empty text={t.needs.noItems}/>}
           <div className="space-y-3">
             {needs.map(n=>{
@@ -676,12 +817,16 @@ function MainApp({lang,setLang,user}){
                         {n.qty&&<p className="text-xs text-slate-500 mt-0.5">📦 {n.qty}</p>}
                         {(ua?n.desc:n.descRu)&&<p className="text-sm text-slate-600 mt-1">{ua?n.desc:n.descRu}</p>}
                       </div>
-                      <span className={`text-xs font-bold px-2.5 py-1 rounded-full flex-shrink-0 ${n.done?"bg-emerald-100 text-emerald-700":"bg-orange-100 text-orange-700"}`}>{n.done?t.needs.done:t.needs.needed}</span>
+                      <div className="flex items-center gap-1 flex-shrink-0">
+                        <span className={`text-xs font-bold px-2.5 py-1 rounded-full ${n.done?"bg-emerald-100 text-emerald-700":"bg-orange-100 text-orange-700"}`}>{n.done?t.needs.done:t.needs.needed}</span>
+                        {canPost&&<button onClick={()=>{setEditNeed({...n});setModal("editNeed");}} className="w-7 h-7 flex items-center justify-center rounded-lg bg-slate-100 hover:bg-blue-100 text-slate-400 hover:text-blue-500 text-sm transition-colors">✏️</button>}
+                        {canPost&&<button onClick={()=>setNeeds(p=>p.filter(x=>x.id!==n.id))} className="w-7 h-7 flex items-center justify-center rounded-lg bg-slate-100 hover:bg-red-100 text-slate-400 hover:text-red-500 text-sm transition-colors">✕</button>}
+                      </div>
                     </div>
                     <div className="mt-3 pt-3 border-t border-slate-50 flex items-center justify-between">
                       <span className="text-xs text-slate-400">{n.helpers.length>0?n.helpers.join(", "):""}</span>
                       <div className="flex gap-2">
-                        {canMgr&&<button onClick={()=>setNeeds(p=>p.map(x=>x.id===n.id?{...x,done:!x.done}:x))} className="text-xs font-bold px-2.5 py-1 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-600 transition-colors">✓</button>}
+                        {canPost&&<button onClick={()=>setNeeds(p=>p.map(x=>x.id===n.id?{...x,done:!x.done}:x))} className="text-xs font-bold px-2.5 py-1 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-600 transition-colors">✓</button>}
                         <button onClick={()=>helpNeed(n.id)} disabled={iHelp||n.done} className={`text-xs font-bold px-3 py-1.5 rounded-xl transition-all ${iHelp?"bg-emerald-100 text-emerald-700":"bg-orange-100 text-orange-700 hover:bg-orange-200"}`}>
                           {iHelp?t.needs.helped:t.needs.canHelp}
                         </button>
@@ -699,6 +844,14 @@ function MainApp({lang,setLang,user}){
               <Fld label={t.needs.desc}><input className={INP} value={fNeed.desc} onChange={e=>setFNeed(f=>({...f,desc:e.target.value}))}/></Fld>
               <div className="flex gap-2 pt-1"><Btn cls="flex-1 text-center" onClick={addNeed}>{t.common.add}</Btn><Btn v="sec" onClick={()=>setModal(null)}>{t.common.cancel}</Btn></div>
             </div>
+          </Modal>
+          <Modal show={modal==="editNeed"} onClose={()=>{setModal(null);setEditNeed(null);}} title={ua?"Редагувати потребу":"Редактировать нужду"}>
+            {editNeed&&<div className="space-y-3">
+              <Fld label={t.needs.item}><input className={INP} value={editNeed.item} onChange={e=>setEditNeed(f=>({...f,item:e.target.value}))}/></Fld>
+              <Fld label={t.needs.qty}><input className={INP} value={editNeed.qty} onChange={e=>setEditNeed(f=>({...f,qty:e.target.value}))}/></Fld>
+              <Fld label={t.needs.desc}><input className={INP} value={editNeed.desc} onChange={e=>setEditNeed(f=>({...f,desc:e.target.value}))}/></Fld>
+              <div className="flex gap-2 pt-1"><Btn cls="flex-1 text-center" onClick={saveNeed}>{ua?"Зберегти":"Сохранить"}</Btn><Btn v="sec" onClick={()=>{setModal(null);setEditNeed(null);}}>{t.common.cancel}</Btn></div>
+            </div>}
           </Modal>
         </div>
       )}
@@ -724,7 +877,10 @@ function MainApp({lang,setLang,user}){
                       <span className={`text-xs font-bold px-2.5 py-1 rounded-full ${HELP_COLORS[h.type]||HELP_COLORS.other}`}>{t.help.types[h.type]}</span>
                       <p className="font-bold text-slate-800 mt-2">{h.anon?(ua?"Анонімно":"Анонимно"):ua?h.name:h.nameRu}</p>
                     </div>
-                    <span className="text-xs text-slate-400 flex-shrink-0">{h.date}</span>
+                    <div className="flex items-center gap-1 flex-shrink-0">
+                      <span className="text-xs text-slate-400">{h.date}</span>
+                      {canPost&&<button onClick={()=>setHelpReqs(p=>p.filter(x=>x.id!==h.id))} className="w-7 h-7 flex items-center justify-center rounded-lg bg-slate-100 hover:bg-red-100 text-slate-400 hover:text-red-500 text-sm transition-colors">✕</button>}
+                    </div>
                   </div>
                   <p className="text-slate-600 text-sm leading-relaxed">{ua?h.desc:h.descRu}</p>
                   {h.contact&&<p className="text-xs text-slate-400 mt-1.5">📞 {h.contact}</p>}
@@ -764,8 +920,7 @@ function MainApp({lang,setLang,user}){
           </div>
           {topTab==="students"&&(
             <div>
-              {canMgr&&<div className="flex justify-end mb-3"><Btn onClick={()=>setModal("topSt")}>{t.top.addSt}</Btn></div>}
-              {!canMgr&&<div className="bg-amber-50 border border-amber-200 rounded-2xl p-3 mb-3 text-xs text-amber-700 font-medium">{t.top.noAccess}</div>}
+              {canPost&&<div className="flex justify-end mb-3"><Btn onClick={()=>setModal("topSt")}>{t.top.addSt}</Btn></div>}
               {topSt.length===0&&<Empty text={t.top.noSt}/>}
               <div className="space-y-3">
                 {topSt.map((s,i)=>(
@@ -782,6 +937,7 @@ function MainApp({lang,setLang,user}){
                         <p className="text-sm text-slate-600 mt-1">{ua?s.reason:s.reasonRu}</p>
                         <p className="text-xs text-slate-400 mt-1">{s.date}</p>
                       </div>
+                      {canPost&&<button onClick={()=>setTopSt(p=>p.filter(x=>x.id!==s.id))} className="w-7 h-7 flex items-center justify-center rounded-lg bg-slate-100 hover:bg-red-100 text-slate-400 hover:text-red-500 text-sm transition-colors flex-shrink-0">✕</button>}
                     </div>
                   </div>
                 ))}
@@ -790,8 +946,7 @@ function MainApp({lang,setLang,user}){
           )}
           {topTab==="parents"&&(
             <div>
-              {canMgr&&<div className="flex justify-end mb-3"><Btn onClick={()=>setModal("topPar")}>{t.top.addPar}</Btn></div>}
-              {!canMgr&&<div className="bg-amber-50 border border-amber-200 rounded-2xl p-3 mb-3 text-xs text-amber-700 font-medium">{t.top.noAccess}</div>}
+              {canPost&&<div className="flex justify-end mb-3"><Btn onClick={()=>setModal("topPar")}>{t.top.addPar}</Btn></div>}
               {topPar.length===0&&<Empty text={t.top.noPar}/>}
               <div className="space-y-3">
                 {topPar.map((p,i)=>(
@@ -807,6 +962,7 @@ function MainApp({lang,setLang,user}){
                         <p className="text-sm text-slate-600 mt-1">{ua?p.reason:p.reasonRu}</p>
                         <p className="text-xs text-slate-400 mt-1">{p.date}</p>
                       </div>
+                      {canPost&&<button onClick={()=>setTopPar(x=>x.filter(q=>q.id!==p.id))} className="w-7 h-7 flex items-center justify-center rounded-lg bg-slate-100 hover:bg-red-100 text-slate-400 hover:text-red-500 text-sm transition-colors flex-shrink-0">✕</button>}
                     </div>
                   </div>
                 ))}
