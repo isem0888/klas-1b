@@ -744,7 +744,7 @@ function MainApp({lang,setLang,user,onChangeRole,onLogout}){
           const name=ua?p.child:p.childRu||p.child;
           const age=now.getFullYear()-b.getFullYear();
           return [{
-            id:Date.now()+Math.random(),
+            id:Date.now()+Math.floor(Math.random()*1000),
             title:`🎂 День народження!`,titleRu:`🎂 День рождения!`,
             text:`Сьогодні виповнюється ${age} років у ${name}! 🎉\nВітаємо іменинника! Нехай кожен день приносить радість, нові друзі та яскраві враження. Здоров'я, щастя та відмінних оцінок! 🌟`,
             textRu:`Сегодня исполняется ${age} лет у ${p.childRu||p.child}! 🎉\nПоздравляем именинника! Пусть каждый день приносит радость, новых друзей и яркие впечатления. Здоровья, счастья и отличных оценок! 🌟`,
@@ -794,7 +794,7 @@ function MainApp({lang,setLang,user,onChangeRole,onLogout}){
   // needs edit/delete
   const saveNeed=()=>{if(!editNeed)return;setNeeds(p=>p.map(n=>n.id!==editNeed.id?n:{...n,item:editNeed.item,itemRu:editNeed.item,qty:editNeed.qty,desc:editNeed.desc,descRu:editNeed.desc}));setEditNeed(null);setModal(null);};
   // ann media upload
-  const handleMedia=e=>{const files=e.target.files;if(!files||!files.length)return;Array.from(files).forEach(f=>{const isVid=f.type.startsWith("video/");if(isVid){const url=URL.createObjectURL(f);setAnn(p=>[{id:Date.now()+Math.random(),title:ua?"Відео":"Видео",titleRu:"Видео",text:"",textRu:"",media:url,mediaType:"video",date:today(),author:user.name,pinned:false},...p]);}else{const rd=new FileReader();rd.onload=ev=>setAnn(p=>[{id:Date.now()+Math.random(),title:ua?"Фото":"Фото",titleRu:"Фото",text:"",textRu:"",media:ev.target.result,mediaType:"image",date:today(),author:user.name,pinned:false},...p]);rd.readAsDataURL(f);}});e.target.value="";};
+  const handleMedia=e=>{const files=e.target.files;if(!files||!files.length)return;Array.from(files).forEach(f=>{const isVid=f.type.startsWith("video/");if(isVid){const url=URL.createObjectURL(f);setAnn(p=>[{id:Date.now()+Math.floor(Math.random()*1000),title:ua?"Відео":"Видео",titleRu:"Видео",text:"",textRu:"",media:url,mediaType:"video",date:today(),author:user.name,pinned:false},...p]);}else{const rd=new FileReader();rd.onload=ev=>setAnn(p=>[{id:Date.now()+Math.floor(Math.random()*1000),title:ua?"Фото":"Фото",titleRu:"Фото",text:"",textRu:"",media:ev.target.result,mediaType:"image",date:today(),author:user.name,pinned:false},...p]);rd.readAsDataURL(f);}});e.target.value="";};
 
   const togglePay=(cId,pId)=>setColls(p=>p.map(c=>c.id!==cId?c:{...c,payments:c.payments.map(pm=>pm.id!==pId?pm:{...pm,paid:!pm.paid})}));
   const joinVol=id=>setEvents(p=>p.map(e=>{const v=e.vol||[];return e.id!==id||v.includes(user.name)?e:{...e,vol:[...v,user.name]};}));
@@ -826,7 +826,7 @@ function MainApp({lang,setLang,user,onChangeRole,onLogout}){
     const files=e.target.files;if(!files||!files.length)return;
     Array.from(files).forEach(f=>{
       const rd=new FileReader();
-      rd.onload=ev=>setPhotos(p=>[{id:Date.now()+Math.random(),src:ev.target.result,name:f.name,by:user.name,date:today()},...p]);
+      rd.onload=ev=>setPhotos(p=>[{id:Date.now()+Math.floor(Math.random()*1000),src:ev.target.result,name:f.name,by:user.name,date:today()},...p]);
       rd.readAsDataURL(f);
     });
     e.target.value="";
