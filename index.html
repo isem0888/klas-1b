@@ -326,7 +326,7 @@ function RegScreen({lang,setLang,onReg}){
   const tgAutoId=window.Telegram?.WebApp?.initDataUnsafe?.user?.id||null;
   const [form,setForm]=useState({name:"",phone:"+380",child:"",childBirthday:"",role:"parent",pass:"",photo:"",tgUsername:tgAutoUser});
   const [c1,setC1]=useState(false);const[c2,setC2]=useState(false);
-  const [err,setErr]=useState("");const[cm,setCm]=useState(null);
+  const [err,setErr]=useState("");const[errNoTg,setErrNoTg]=useState(false);const[cm,setCm]=useState(null);
   const photoRef=useRef(null);
   const needPass=form.role!=="parent";
   const set=(k,v)=>setForm(f=>({...f,[k]:v}));
@@ -339,7 +339,8 @@ function RegScreen({lang,setLang,onReg}){
   };
   const canSubmit=c1&&c2;
   const submit=()=>{
-    if(!form.name.trim()||!form.child.trim()||!form.tgUsername.trim()){setErr(lang==="ua"?"Заповніть всі обов'язкові поля (ім'я, дитина, Telegram)":"Заполните все обязательные поля (имя, ребёнок, Telegram)");return;}
+    if(!form.name.trim()||!form.child.trim()||!form.tgUsername.trim()){setErr(lang==="ua"?"Заповніть всі обов'язкові поля (ім'я, дитина, Telegram)":"Заполните все обязательные поля (имя, ребёнок, Telegram)");setErrNoTg(!form.tgUsername.trim());return;}
+    setErrNoTg(false);
     if(!c1||!c2){setErr(r.err);return;}
     if(needPass&&form.pass!==ROLE_PASSWORDS[form.role]){setErr(r.wrongPass);return;}
     const roleNames={parent:"Батько/Мати",teacher:"Вчитель",admin:"Адміністратор",chairman:"Голова комітету"};
@@ -448,7 +449,7 @@ function RegScreen({lang,setLang,onReg}){
           {tgAutoId&&<div className="bg-emerald-50 border border-emerald-200 rounded-xl p-3 text-xs text-emerald-700">
             ✅ {lang==="ua"?"Telegram визначено — будете отримувати сповіщення про нові оголошення.":"Telegram определён — будете получать уведомления о новых объявлениях."}
           </div>}
-          {err&&<p className="text-rose-500 text-xs font-medium">{err}</p>}
+          {err&&<p className="text-rose-500 text-xs font-medium">{err}{errNoTg&&<> — <button type="button" onClick={()=>{if(window.Telegram?.WebApp?.openLink)window.Telegram.WebApp.openLink("https://t.me/settings/edit_profile");else window.open("https://t.me/settings","_blank");}} className="underline font-bold text-blue-500 hover:text-blue-700">{lang==="ua"?"додати username":"добавить username"}</button></>}</p>}
           <button
             onClick={submit}
             disabled={!canSubmit}
