@@ -136,6 +136,24 @@ const sendTgMsg = (text) => {
   }).catch(()=>{});
 };
 
+// ── BROADCAST TG TO ALL PARENTS ──────────────────────────────────────────────
+// Надсилає повідомлення ВСІМ батькам у Telegram (у кого є tgId в базі)
+const broadcastTg = (text) => {
+  const token = window.TG_BOT_TOKEN;
+  if (!token || !window._db) return;
+  window._db.ref(`${DB_ROOT}/parents`).once('value', snap => {
+    const all = snap.val() ? Object.values(snap.val()) : [];
+    all.forEach(p => {
+      if (p.tgId) {
+        fetch(`https://api.telegram.org/bot${token}/sendMessage`, {
+          method:'POST', headers:{'Content-Type':'application/json'},
+          body: JSON.stringify({chat_id: p.tgId, text, parse_mode:'HTML'})
+        }).catch(()=>{});
+      }
+    });
+  }).catch(()=>{});
+};
+
 // ── BROWSER PUSH NOTIFICATIONS ────────────────────────────────────────────────
 const requestNotifPerm = () => {
   if ('Notification' in window && Notification.permission === 'default')
@@ -302,8 +320,9 @@ function Empty({text}){return <div className="text-center py-14 text-slate-400">
 // ── REGISTRATION ──────────────────────────────────────────────────────────────
 function RegScreen({lang,setLang,onReg}){
   const t=L[lang];const r=t.reg;
-  // Автоматично беремо TG username із WebApp
+  // Автоматично беремо TG username та id із WebApp
   const tgAutoUser=window.Telegram?.WebApp?.initDataUnsafe?.user?.username||"";
+  const tgAutoId=window.Telegram?.WebApp?.initDataUnsafe?.user?.id||null;
   const [form,setForm]=useState({name:"",phone:"",child:"",childBirthday:"",role:"parent",pass:"",photo:"",tgUsername:tgAutoUser});
   const [c1,setC1]=useState(false);const[c2,setC2]=useState(false);
   const [err,setErr]=useState("");const[cm,setCm]=useState(null);
@@ -324,7 +343,7 @@ function RegScreen({lang,setLang,onReg}){
     const tgU=form.tgUsername.replace(/^@/,"").trim();
     const doReg=(finalId, isNew)=>{
       const u={id:finalId,name:form.name,phone:form.phone,child:form.child,childRu:form.child,
-               childBirthday:form.childBirthday,role:form.role,photo:form.photo,tgUsername:tgU};
+               childBirthday:form.childBirthday,role:form.role,photo:form.photo,tgUsername:tgU,tgId:tgAutoId};
       localStorage.setItem("rc_user",JSON.stringify(u));
       if(window._db){
         window._db.ref(`${DB_ROOT}/parents/${finalId}`).set({
@@ -332,7 +351,7 @@ function RegScreen({lang,setLang,onReg}){
           child:form.child, childRu:form.child,
           childBirthday:form.childBirthday,
           phone:form.phone, role:form.role, photo:form.photo||"",
-          tgUsername:tgU, comment:""
+          tgUsername:tgU, tgId:tgAutoId||null, comment:""
         }).catch(()=>{});
       }
       if(isNew){
@@ -405,6 +424,12 @@ function RegScreen({lang,setLang,onReg}){
               </div>
             ))}
           </div>
+          {!tgAutoId&&<div className="bg-blue-50 border border-blue-200 rounded-xl p-3 text-xs text-blue-700 leading-relaxed">
+            💬 {lang==="ua"?"Щоб отримувати сповіщення у Telegram — спочатку запустіть бота: натисніть /start у чаті з ботом класу.":"Чтобы получать уведомления в Telegram — сначала запустите бота: нажмите /start в чате с ботом класса."}
+          </div>}
+          {tgAutoId&&<div className="bg-emerald-50 border border-emerald-200 rounded-xl p-3 text-xs text-emerald-700">
+            ✅ {lang==="ua"?"Telegram визначено — будете отримувати сповіщення про нові оголошення.":"Telegram определён — будете получать уведомления о новых объявлениях."}
+          </div>}
           {err&&<p className="text-rose-500 text-xs font-medium">{err}</p>}
           <Btn cls="w-full text-center justify-center" onClick={submit}>{r.submit}</Btn>
         </div>
@@ -575,7 +600,15 @@ function MainApp({lang,setLang,user,onChangeRole}){
     });
   },[parents.length]);
 
-  const addAnn=()=>{if(!fAnn.title.trim()||!fAnn.text.trim())return;setAnn(p=>[{id:Date.now(),title:fAnn.title,titleRu:fAnn.title,text:fAnn.text,textRu:fAnn.text,date:today(),author:user.name,pinned:false},...p]);setFAnn({title:"",text:""});setModal(null);};
+  const addAnn=()=>{
+    if(!fAnn.title.trim()||!fAnn.text.trim())return;
+    setAnn(p=>[{id:Date.now(),title:fAnn.title,titleRu:fAnn.title,text:fAnn.text,textRu:fAnn.text,date:today(),author:user.name,pinned:false},...p]);
+    // Браузерний push
+    pushNotif(fAnn.title, fAnn.text.slice(0,120));
+    // Telegram розсилка всім батькам
+    broadcastTg(`📢 <b>${fAnn.title}</b>\n\n${fAnn.text.slice(0,300)}${fAnn.text.length>300?"…":""}\n\n<i>— ${user.name} • Батьківський комітет 1Б</i>`);
+    setFAnn({title:"",text:""});setModal(null);
+  };
   const addEv=()=>{if(!fEv.title.trim()||!fEv.date)return;setEvents(p=>[...p,{id:Date.now(),title:fEv.title,titleRu:fEv.title,date:fEv.date,time:fEv.time,type:fEv.type,vol:[]}].sort((a,b)=>a.date.localeCompare(b.date)));setFEv({title:"",date:"",time:"",type:"meeting"});setModal(null);};
   const addExp=()=>{if(!fExp.desc.trim()||!fExp.amount)return;setExps(p=>[...p,{id:Date.now(),desc:fExp.desc,descRu:fExp.desc,amount:+fExp.amount,date:today()}]);setFExp({desc:"",amount:""});setModal(null);};
   const addCol=()=>{if(!fCol.name.trim()||!fCol.amount)return;setColls(p=>[...p,{id:Date.now(),name:fCol.name,nameRu:fCol.name,amount:+fCol.amount,payments:parents.map((pr,i)=>({id:i,p:pr.name,pRu:pr.nameRu,paid:false}))}]);setFCol({name:"",amount:""});setModal(null);};
