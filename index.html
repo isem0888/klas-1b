@@ -503,7 +503,6 @@ function App(){
     if(!window.confirm(lang==="ua"?"Вийти з акаунту?":"Выйти из аккаунта?")) return;
     localStorage.removeItem("rc_user");
     localStorage.removeItem("rc_seen");
-    localStorage.removeItem("rc_voted");
     setUser(null);
   };
   if(!user)return<RegScreen lang={lang} setLang={setLang} onReg={u=>setUser(u)}/>;
@@ -668,14 +667,16 @@ function MainApp({lang,setLang,user,onChangeRole,onLogout}){
   const togglePay=(cId,pId)=>setColls(p=>p.map(c=>c.id!==cId?c:{...c,payments:c.payments.map(pm=>pm.id!==pId?pm:{...pm,paid:!pm.paid})}));
   const joinVol=id=>setEvents(p=>p.map(e=>{const v=e.vol||[];return e.id!==id||v.includes(user.name)?e:{...e,vol:[...v,user.name]};}));
   const leaveVol=id=>setEvents(p=>p.map(e=>e.id!==id?e:{...e,vol:(e.vol||[]).filter(n=>n!==user.name)}));
-  // voted зберігається локально (у кожного свій), не у Firebase
-  const [votedPolls,setVotedPolls]=useState(()=>{try{return JSON.parse(localStorage.getItem("rc_voted"))||{};}catch(e){return{};}});
+  // voted зберігається у Firebase всередині опитування (voters: {userId: optIdx})
+  // Це не залежить від пристрою чи виходу з акаунту
   const vote=(pid,idx)=>{
-    if(votedPolls[pid]!==undefined) return;
-    setPolls(p=>p.map(pl=>pl.id!==pid?pl:{...pl,votes:pl.votes.map((v,i)=>i===idx?v+1:v)}));
-    const next={...votedPolls,[pid]:idx};
-    setVotedPolls(next);
-    localStorage.setItem("rc_voted",JSON.stringify(next));
+    const uid=String(user.id||user.phone||user.name);
+    setPolls(p=>p.map(pl=>{
+      if(pl.id!==pid) return pl;
+      const voters=pl.voters||{};
+      if(voters[uid]!==undefined) return pl; // вже голосував
+      return{...pl,votes:pl.votes.map((v,i)=>i===idx?v+1:v),voters:{...voters,[uid]:idx}};
+    }));
   };
   const helpNeed=id=>setNeeds(p=>p.map(n=>n.id!==id?n:{...n,helpers:n.helpers.includes(user.name)?n.helpers:[...n.helpers,user.name]}));
   const helpReq=id=>setHelpReqs(p=>p.map(h=>h.id!==id?h:{...h,helpers:h.helpers+1}));
@@ -962,6 +963,8 @@ function MainApp({lang,setLang,user,onChangeRole,onLogout}){
             {polls.map(poll=>{
               const total=poll.votes.reduce((a,b)=>a+b,0);const maxV=Math.max(...poll.votes);
               const opts=ua?poll.opts:poll.optsRu;
+              const uid=String(user.id||user.phone||user.name);
+              const myVoteIdx=(poll.voters||{})[uid];
               return(
                 <div key={poll.id} className="card">
                   <div className="h-1.5 grad-sky"/>
@@ -973,11 +976,10 @@ function MainApp({lang,setLang,user,onChangeRole,onLogout}){
                     <div className="space-y-3">
                       {opts.map((opt,idx)=>{
                         const pct=total>0?Math.round(poll.votes[idx]/total*100):0;
-                        const myVote=votedPolls[poll.id];
-                        const isW=poll.votes[idx]===maxV&&total>0&&myVote!==undefined;
-                        const isMe=myVote===idx;
+                        const isW=poll.votes[idx]===maxV&&total>0&&myVoteIdx!==undefined;
+                        const isMe=myVoteIdx===idx;
                         return(
-                          <button key={idx} onClick={()=>vote(poll.id,idx)} disabled={myVote!==undefined||!poll.active} className="w-full text-left">
+                          <button key={idx} onClick={()=>vote(poll.id,idx)} disabled={myVoteIdx!==undefined||!poll.active} className="w-full text-left">
                             <div className="flex justify-between mb-1"><span className={`text-sm font-semibold ${isMe?"text-violet-600":isW?"text-emerald-600":"text-slate-700"}`}>{opt}</span><span className="text-xs text-slate-400 ml-2">{poll.votes[idx]} ({pct}%)</span></div>
                             <div className="w-full bg-slate-100 rounded-full h-2 overflow-hidden"><div className={`h-2 rounded-full transition-all duration-500 ${isMe?"bg-gradient-to-r from-violet-500 to-indigo-500":isW?"bg-gradient-to-r from-emerald-400 to-teal-500":"bg-slate-300"}`} style={{width:`${pct}%`}}/></div>
                           </button>
@@ -992,7 +994,7 @@ function MainApp({lang,setLang,user,onChangeRole,onLogout}){
                         {canPost&&<button onClick={()=>setPolls(p=>p.filter(x=>x.id!==poll.id))} className="w-6 h-6 flex items-center justify-center rounded-lg bg-slate-100 hover:bg-red-100 text-slate-400 hover:text-red-500 transition-colors">✕</button>}
                       </div>
                     </div>
-                    {votedPolls[poll.id]===undefined&&poll.active?<p className="text-xs text-violet-500 font-semibold mt-2">{t.pol.hint}</p>:votedPolls[poll.id]!==undefined?<p className="text-xs text-emerald-600 font-semibold mt-2">{t.pol.voted}</p>:null}
+                    {myVoteIdx===undefined&&poll.active?<p className="text-xs text-violet-500 font-semibold mt-2">{t.pol.hint}</p>:myVoteIdx!==undefined?<p className="text-xs text-emerald-600 font-semibold mt-2">{t.pol.voted}</p>:null}
                   </div>
                 </div>
               );
