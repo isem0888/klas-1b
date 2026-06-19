@@ -649,6 +649,17 @@ function MainApp({lang,setLang,user,onChangeRole,onLogout}){
     return()=>clearInterval(t);
   },[]);
 
+  // Автоматично зберігаємо tgId якщо він є в WebApp але не збережений у Firebase
+  useEffect(()=>{
+    const tgId=window.Telegram?.WebApp?.initDataUnsafe?.user?.id;
+    if(!tgId||!user?.id||!window._db) return;
+    window._db.ref(`klas1b/parents/${user.id}/tgId`).once("value",snap=>{
+      if(!snap.val()){
+        window._db.ref(`klas1b/parents/${user.id}/tgId`).set(tgId).catch(()=>{});
+      }
+    }).catch(()=>{});
+  },[user?.id]);
+
   const canPost=CAN_POST.includes(user.role);
   const isNewReg=p=>{
     if(user.role!=="admin"&&user.role!=="chairman") return false;
