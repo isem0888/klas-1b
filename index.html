@@ -603,7 +603,13 @@ function MainApp({lang,setLang,user,onChangeRole,onLogout}){
   },[]);
 
   const canPost=CAN_POST.includes(user.role);
-  const isNewReg=p=>(user.role==="admin"||user.role==="chairman")&&p.registeredAt&&(Date.now()-p.registeredAt<7200000);
+  const isNewReg=p=>{
+    if(user.role!=="admin"&&user.role!=="chairman") return false;
+    const SEED_MAX=1000029;
+    if(p.registeredAt) return Date.now()-p.registeredAt<7200000;
+    // якщо registeredAt ще не збережено але це не seed-батько — вважаємо новим
+    return Number(p.id)>SEED_MAX;
+  };
   const canMgr=CAN_MANAGE.includes(user.role);
   const canFin=CAN_FIN.includes(user.role);
   const canSched=CAN_SCHED.includes(user.role);
@@ -715,7 +721,7 @@ function MainApp({lang,setLang,user,onChangeRole,onLogout}){
 
   const upEv=events.filter(e=>e.date>=today());
   const pastEv=events.filter(e=>e.date<today());
-  const filtPar=parents.filter(p=>{const q=psearch.toLowerCase();return(ua?p.name:p.nameRu).toLowerCase().includes(q)||(ua?p.child:p.childRu).toLowerCase().includes(q);});
+  const filtPar=parents.filter(p=>{const q=psearch.toLowerCase();return(ua?p.name:p.nameRu).toLowerCase().includes(q)||(ua?p.child:p.childRu).toLowerCase().includes(q);}).sort((a,b)=>{const SEED_MAX=1000029;const now=Date.now();const aNew=(a.registeredAt?(now-a.registeredAt<7200000):Number(a.id)>SEED_MAX)?1:0;const bNew=(b.registeredAt?(now-b.registeredAt<7200000):Number(b.id)>SEED_MAX)?1:0;if(bNew!==aNew)return bNew-aNew;return(ua?a.name:a.nameRu).localeCompare(ua?b.name:b.nameRu,"uk");});
 
   // ── BADGE COUNTERS (нові елементи у вкладках) ─────────────────────────────
   const [seenCounts,setSeenCounts]=useState(()=>{try{return JSON.parse(localStorage.getItem("rc_seen"))||{};}catch(e){return{};}});
