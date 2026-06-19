@@ -510,8 +510,33 @@ function MainApp({lang,setLang,user,onChangeRole}){
     return Math.ceil((b-now)/86400000);
   };
   const childBdays = parents.filter(p=>p.childBirthday)
-    .map(p=>({n:ua?p.child:p.childRu||p.child, nRu:p.childRu||p.child, d:p.childBirthday}));
+    .map(p=>({n:ua?p.child:p.childRu||p.child, nRu:p.childRu||p.child, d:p.childBirthday}))
+    .sort((a,b)=>bDaysUntil(a.d)-bDaysUntil(b.d)); // сортуємо від найближчого
   const upBday = childBdays.map(b=>({...b,days:bDaysUntil(b.d)})).filter(b=>b.days>=0&&b.days<=7).sort((a,b)=>a.days-b.days)[0];
+
+  // Автоматичне привітання в Новинах у день народження
+  useEffect(()=>{
+    if(!parents.length) return;
+    const now=new Date();
+    parents.filter(p=>p.childBirthday).forEach(p=>{
+      const b=new Date(p.childBirthday);
+      if(b.getMonth()===now.getMonth()&&b.getDate()===now.getDate()){
+        const bdayKey=`bday_${p.childBirthday}_${today()}`;
+        setAnn(prev=>{
+          if(prev.some(a=>a.bdayKey===bdayKey)) return prev;
+          const name=ua?p.child:p.childRu||p.child;
+          const age=now.getFullYear()-b.getFullYear();
+          return [{
+            id:Date.now()+Math.random(),
+            title:`🎂 День народження!`,titleRu:`🎂 День рождения!`,
+            text:`Сьогодні виповнюється ${age} років у ${name}! 🎉\nВітаємо іменинника! Нехай кожен день приносить радість, нові друзі та яскраві враження. Здоров'я, щастя та відмінних оцінок! 🌟`,
+            textRu:`Сегодня исполняется ${age} лет у ${p.childRu||p.child}! 🎉\nПоздравляем именинника! Пусть каждый день приносит радость, новых друзей и яркие впечатления. Здоровья, счастья и отличных оценок! 🌟`,
+            date:today(),author:"🎂",pinned:true,bdayKey
+          },...prev.filter(a=>a.bdayKey!==bdayKey)];
+        });
+      }
+    });
+  },[parents.length]);
 
   const addAnn=()=>{if(!fAnn.title.trim()||!fAnn.text.trim())return;setAnn(p=>[{id:Date.now(),title:fAnn.title,titleRu:fAnn.title,text:fAnn.text,textRu:fAnn.text,date:today(),author:user.name,pinned:false},...p]);setFAnn({title:"",text:""});setModal(null);};
   const addEv=()=>{if(!fEv.title.trim()||!fEv.date)return;setEvents(p=>[...p,{id:Date.now(),title:fEv.title,titleRu:fEv.title,date:fEv.date,time:fEv.time,type:fEv.type,vol:[]}].sort((a,b)=>a.date.localeCompare(b.date)));setFEv({title:"",date:"",time:"",type:"meeting"});setModal(null);};
@@ -791,7 +816,7 @@ function MainApp({lang,setLang,user,onChangeRole}){
         <div>
           <div className="flex justify-between items-center mb-3"><h2 className="font-black text-slate-800 text-lg">{t.par.title} ({parents.length})</h2><Btn onClick={()=>setModal("par")}>{t.par.add}</Btn></div>
           <input className={`${INP} mb-3`} placeholder={t.par.search} value={psearch} onChange={e=>setPsearch(e.target.value)}/>
-          {filtPar.filter(p=>p.role!=="parent").length>0&&<><SL>{t.par.comm}</SL><div className="space-y-2 mb-2">{filtPar.filter(p=>p.role!=="parent").map(p=>{const isOwn=p.id===user.id||p.name===user.name;return(<div key={p.id} className="card"><div className="h-1 grad-violet"/><div className="card-inner flex items-center gap-3"><Av name={ua?p.name:p.nameRu} photo={p.photo} sz="md"/><div className="flex-1"><p className="font-bold text-slate-900 text-sm">{ua?p.name:p.nameRu}</p><p className="text-xs text-slate-500">{ua?p.child:p.childRu} · {p.phone}</p>{p.comment&&<p className="text-xs text-slate-400 mt-0.5 italic">{p.comment}</p>}</div><div className="flex items-center gap-1"><span className="text-xs font-bold px-2.5 py-1 rounded-full bg-violet-100 text-violet-700">{t.roles[p.role]}</span>{(canPost||isOwn)&&<button onClick={()=>{setEditPar({...p,comment:p.comment||""});setModal("editPar");}} className="w-7 h-7 flex items-center justify-center rounded-lg bg-slate-100 hover:bg-blue-100 text-slate-400 hover:text-blue-500 text-sm transition-colors">✏️</button>}{canPost&&<button onClick={()=>setParents(x=>x.filter(q=>q.id!==p.id))} className="w-7 h-7 flex items-center justify-center rounded-lg bg-slate-100 hover:bg-red-100 text-slate-400 hover:text-red-500 text-sm transition-colors">✕</button>}</div></div></div>);})}</div></>}
+          {filtPar.filter(p=>p.role!=="parent").length>0&&<><SL>{t.par.comm}</SL><div className="space-y-4 mb-4">{filtPar.filter(p=>p.role!=="parent").map(p=>{const isOwn=p.id===user.id||p.name===user.name;const roleColor={teacher:"from-amber-500 to-orange-500",admin:"from-rose-500 to-pink-600",chairman:"from-violet-600 to-indigo-600"}[p.role]||"from-violet-600 to-indigo-600";return(<div key={p.id} className="rounded-2xl overflow-hidden shadow-md" style={{background:"#fff",border:"1px solid #ede9fe"}}><div className={`h-1.5 bg-gradient-to-r ${roleColor}`}/><div className="p-4 flex items-center gap-4"><Av name={ua?p.name:p.nameRu} photo={p.photo} sz="lg"/><div className="flex-1 min-w-0"><p className="font-bold text-slate-900 text-base leading-snug">{ua?p.name:p.nameRu}</p><p className="text-xs text-slate-500 mt-0.5">{p.phone}</p>{p.comment&&<p className="text-xs text-slate-400 mt-1 italic">"{p.comment}"</p>}</div><div className="flex flex-col items-end gap-2"><span className={`text-xs font-bold px-3 py-1 rounded-full text-white bg-gradient-to-r ${roleColor}`}>{t.roles[p.role]}</span><div className="flex gap-1">{(canPost||isOwn)&&<button onClick={()=>{setEditPar({...p,comment:p.comment||""});setModal("editPar");}} className="w-7 h-7 flex items-center justify-center rounded-lg bg-slate-100 hover:bg-blue-100 text-slate-400 hover:text-blue-500 text-sm transition-colors">✏️</button>}{canPost&&<button onClick={()=>setParents(x=>x.filter(q=>q.id!==p.id))} className="w-7 h-7 flex items-center justify-center rounded-lg bg-slate-100 hover:bg-red-100 text-slate-400 hover:text-red-500 text-sm transition-colors">✕</button>}</div></div></div></div>);})}</div></>}
           <SL>{t.par.all}</SL>
           <div className="space-y-2">{filtPar.filter(p=>p.role==="parent").map(p=>{const isOwn=p.id===user.id||p.name===user.name;return(<div key={p.id} className="card"><div className="card-inner flex items-center gap-3 py-3"><Av name={ua?p.name:p.nameRu} photo={p.photo} sz="sm"/><div className="flex-1"><p className="font-semibold text-slate-800 text-sm">{ua?p.name:p.nameRu}</p><p className="text-xs text-slate-500">{ua?p.child:p.childRu} · {p.phone}</p>{p.comment&&<p className="text-xs text-slate-400 mt-0.5 italic">{p.comment}</p>}</div><div className="flex gap-1">{(canPost||isOwn)&&<button onClick={()=>{setEditPar({...p,comment:p.comment||""});setModal("editPar");}} className="w-7 h-7 flex items-center justify-center rounded-lg bg-slate-100 hover:bg-blue-100 text-slate-400 hover:text-blue-500 text-sm transition-colors">✏️</button>}{canPost&&<button onClick={()=>setParents(x=>x.filter(q=>q.id!==p.id))} className="w-7 h-7 flex items-center justify-center rounded-lg bg-slate-100 hover:bg-red-100 text-slate-400 hover:text-red-500 text-sm transition-colors">✕</button>}</div></div></div>);})}</div>
           <Modal show={modal==="par"} onClose={()=>setModal(null)} title={t.par.add}>
