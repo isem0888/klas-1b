@@ -159,20 +159,22 @@ const sendTgMsg = (text) => {
 // Надсилає повідомлення ВСІМ батькам у Telegram (у кого є tgId в базі)
 const broadcastTg = (text) => {
   if (!window._db) return;
-  // Читаємо тільки токен (не весь klas1b — там можуть бути великі фото)
   window._db.ref("klas1b/tgToken").once('value', snap => {
     const token = snap.val();
     if (!token) return;
+    const send = (chatId) => fetch(`https://api.telegram.org/bot${token}/sendMessage`, {
+      method:'POST', headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({chat_id: String(chatId), text, parse_mode:'HTML'})
+    }).catch(()=>{});
+    // Завжди надсилаємо адміну
+    window._db.ref("klas1b/tgChat").once('value', cs => {
+      const adminChat = cs.val();
+      if (adminChat) send(adminChat);
+    }).catch(()=>{});
+    // Розсилаємо всім батькам з tgId
     window._db.ref(`${DB_ROOT}/parents`).once('value', snap2 => {
       const all = snap2.val() ? Object.values(snap2.val()) : [];
-      const withId = all.filter(p => p && p.tgId);
-      console.log(`[broadcastTg] розсилка ${withId.length} батькам`);
-      withId.forEach(p => {
-        fetch(`https://api.telegram.org/bot${token}/sendMessage`, {
-          method:'POST', headers:{'Content-Type':'application/json'},
-          body: JSON.stringify({chat_id: String(p.tgId), text, parse_mode:'HTML'})
-        }).catch(e=>console.warn('[broadcastTg] помилка:', e));
-      });
+      all.filter(p => p && p.tgId).forEach(p => send(p.tgId));
     }).catch(()=>{});
   }).catch(()=>{});
 };
