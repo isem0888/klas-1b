@@ -52,8 +52,11 @@ window.onerror=function(msg,src,line){
         { "rules": { ".read": true, ".write": true } }
      ═══════════════════════════════════════════════════════════════════ -->
 <script>
-window.TG_BOT_TOKEN   = "8989913497:AAG4so5_1jtUqUW_gPVy9oXbGa2yhXOss2E";
-window.TG_ADMIN_CHAT  = "6713808542";
+// 🔐 Токен та chat_id зберігаються у Firebase, а не у коді
+// Щоб встановити: Firebase Console → Realtime Database → klas1b/config
+// { "tgToken": "ВАШ_ТОКЕН", "tgChat": "ВАШ_CHAT_ID" }
+window.TG_BOT_TOKEN  = "";
+window.TG_ADMIN_CHAT = "";
 
 const FIREBASE_CONFIG = {
   apiKey:            "AIzaSyAvSweaMli_wYZF1fk8NKF7FNVXLH2KEq0",
@@ -67,6 +70,14 @@ const FIREBASE_CONFIG = {
 try {
   firebase.initializeApp(FIREBASE_CONFIG);
   window._db = firebase.database();
+  // Завантажуємо TG-конфіг з Firebase (токен не зберігається у коді)
+  window._db.ref("klas1b").once("value", snap => {
+    const cfg = snap.val();
+    if (cfg) {
+      if (cfg.tgToken) window.TG_BOT_TOKEN  = cfg.tgToken;
+      if (cfg.tgChat)  window.TG_ADMIN_CHAT = String(cfg.tgChat);
+    }
+  });
 } catch(e) {
   window._db = null;
   console.warn("Firebase не налаштовано:", e.message);
@@ -307,25 +318,40 @@ function RegScreen({lang,setLang,onReg}){
   const submit=()=>{
     if(!form.name.trim()||!form.child.trim()||!c1||!c2){setErr(r.err);return;}
     if(needPass&&form.pass!==ROLE_PASSWORDS[form.role]){setErr(r.wrongPass);return;}
-    const id=Date.now();
-    const u={id,name:form.name,phone:form.phone,child:form.child,childRu:form.child,
-             childBirthday:form.childBirthday,role:form.role,photo:form.photo};
-    localStorage.setItem("rc_user",JSON.stringify(u));
-    // Додаємо батьків у спільну Firebase базу
-    if(window._db){
-      window._db.ref(`${DB_ROOT}/parents/${id}`).set({
-        id, name:form.name, nameRu:form.name,
-        child:form.child, childRu:form.child,
-        childBirthday:form.childBirthday,
-        phone:form.phone, role:form.role, photo:form.photo, comment:""
-      }).catch(()=>{});
-    }
-    // Telegram повідомлення адміністратору
     const roleNames={parent:"Батько/Мати",teacher:"Вчитель",admin:"Адміністратор",chairman:"Голова комітету"};
-    sendTgMsg(`🆕 <b>Нова реєстрація — 1Б клас</b>\n\n👤 <b>${form.name}</b>\n👦 Дитина: ${form.child}${form.childBirthday?"\n🎂 Д/н: "+form.childBirthday:""}\n📞 Тел: ${form.phone||"—"}\n🏷 Роль: ${roleNames[form.role]}\n🕐 ${new Date().toLocaleString("uk-UA")}`);
-    // Дозвіл на push-повідомлення
-    requestNotifPerm();
-    onReg(u);
+    const doReg=(finalId, isNew)=>{
+      const u={id:finalId,name:form.name,phone:form.phone,child:form.child,childRu:form.child,
+               childBirthday:form.childBirthday,role:form.role,photo:form.photo};
+      localStorage.setItem("rc_user",JSON.stringify(u));
+      if(window._db){
+        window._db.ref(`${DB_ROOT}/parents/${finalId}`).set({
+          id:finalId, name:form.name, nameRu:form.name,
+          child:form.child, childRu:form.child,
+          childBirthday:form.childBirthday,
+          phone:form.phone, role:form.role, photo:form.photo||"", comment:""
+        }).catch(()=>{});
+      }
+      if(isNew){
+        sendTgMsg(`🆕 <b>Нова реєстрація — 1Б клас</b>\n\n👤 <b>${form.name}</b>\n👦 Дитина: ${form.child}${form.childBirthday?"\n🎂 Д/н: "+form.childBirthday:""}\n📞 Тел: ${form.phone||"—"}\n🏷 Роль: ${roleNames[form.role]}\n🕐 ${new Date().toLocaleString("uk-UA")}`);
+      }
+      requestNotifPerm();
+      onReg(u);
+    };
+    // Перевіряємо чи вже є в базі (по телефону або імені) — щоб не дублювати
+    if(window._db && form.phone){
+      window._db.ref(`${DB_ROOT}/parents`).once('value', snap=>{
+        const all = snap.val() ? Object.values(snap.val()) : [];
+        const phone=form.phone.replace(/\D/g,"");
+        const existing=all.find(p=>p.phone&&p.phone.replace(/\D/g,"")===phone);
+        if(existing){
+          doReg(existing.id, false); // оновлюємо існуючий запис
+        } else {
+          doReg(Date.now(), true); // новий запис + TG
+        }
+      }).catch(()=>doReg(Date.now(), true));
+    } else {
+      doReg(Date.now(), true);
+    }
   };
   return(
     <div className="min-h-screen flex flex-col items-center justify-center p-4" style={{background:"linear-gradient(135deg,#f0f4ff 0%,#faf0ff 100%)"}}>
