@@ -532,6 +532,7 @@ function MainApp({lang,setLang,user,onChangeRole}){
   const [psearch,setPsearch]=useState("");
   const fileRef=useRef(null);
   const mediaRef=useRef(null);
+  const receiptRef=useRef(null);
 
   // edit states
   const [editAnn,setEditAnn]=useState(null);
@@ -545,7 +546,7 @@ function MainApp({lang,setLang,user,onChangeRole}){
   // forms
   const [fAnn,setFAnn]=useState({title:"",text:""});
   const [fEv,setFEv]=useState({title:"",date:"",time:"",type:"meeting"});
-  const [fExp,setFExp]=useState({desc:"",amount:""});
+  const [fExp,setFExp]=useState({desc:"",amount:"",receipt:""});
   const [fCol,setFCol]=useState({name:"",amount:""});
   const [fPar,setFPar]=useState({name:"",child:"",phone:"",role:"parent"});
   const [fPoll,setFPoll]=useState({q:"",opts:["","","",""],deadline:""});
@@ -610,10 +611,11 @@ function MainApp({lang,setLang,user,onChangeRole}){
     setFAnn({title:"",text:""});setModal(null);
   };
   const addEv=()=>{if(!fEv.title.trim()||!fEv.date)return;setEvents(p=>[...p,{id:Date.now(),title:fEv.title,titleRu:fEv.title,date:fEv.date,time:fEv.time,type:fEv.type,vol:[]}].sort((a,b)=>a.date.localeCompare(b.date)));setFEv({title:"",date:"",time:"",type:"meeting"});setModal(null);};
-  const addExp=()=>{if(!fExp.desc.trim()||!fExp.amount)return;setExps(p=>[...p,{id:Date.now(),desc:fExp.desc,descRu:fExp.desc,amount:+fExp.amount,date:today()}]);setFExp({desc:"",amount:""});setModal(null);};
+  const addExp=()=>{if(!fExp.desc.trim()||!fExp.amount)return;setExps(p=>[...p,{id:Date.now(),desc:fExp.desc,descRu:fExp.desc,amount:+fExp.amount,date:today(),receipt:fExp.receipt||""}]);setFExp({desc:"",amount:"",receipt:""});setModal(null);};
+  const handleReceipt=e=>{const f=e.target.files[0];if(!f)return;const rd=new FileReader();rd.onload=ev=>setFExp(x=>({...x,receipt:ev.target.result}));rd.readAsDataURL(f);e.target.value="";};
   const addCol=()=>{if(!fCol.name.trim()||!fCol.amount)return;setColls(p=>[...p,{id:Date.now(),name:fCol.name,nameRu:fCol.name,amount:+fCol.amount,payments:parents.map((pr,i)=>({id:i,p:pr.name,pRu:pr.nameRu,paid:false}))}]);setFCol({name:"",amount:""});setModal(null);};
   const addPar=()=>{if(!fPar.name.trim())return;setParents(p=>[...p,{id:Date.now(),name:fPar.name,nameRu:fPar.name,child:fPar.child,childRu:fPar.child,phone:fPar.phone,role:fPar.role}]);setFPar({name:"",child:"",phone:"",role:"parent"});setModal(null);};
-  const addPoll=()=>{const opts=fPoll.opts.filter(o=>o.trim());if(!fPoll.q.trim()||opts.length<2)return;setPolls(p=>[...p,{id:Date.now(),q:fPoll.q,qRu:fPoll.q,opts,optsRu:opts,votes:opts.map(()=>0),voted:null,active:true,deadline:fPoll.deadline||""}]);setFPoll({q:"",opts:["","","",""],deadline:""});setModal(null);};
+  const addPoll=()=>{const opts=fPoll.opts.filter(o=>o.trim());if(!fPoll.q.trim()||opts.length<2)return;setPolls(p=>[...p,{id:Date.now(),q:fPoll.q,qRu:fPoll.q,opts,optsRu:opts,votes:opts.map(()=>0),active:true,deadline:fPoll.deadline||""}]);broadcastTg(`🗳 <b>${ua?"Нове опитування":"Новый опрос"}</b>\n\n${fPoll.q}\n\n${opts.map((o,i)=>` ${i+1}. ${o}`).join("\n")}\n\n<i>${ua?"Батьківський комітет 1Б":"Родительский комитет 1Б"}</i>`);setFPoll({q:"",opts:["","","",""],deadline:""});setModal(null);};
   const addNeed=()=>{if(!fNeed.item.trim())return;setNeeds(p=>[...p,{id:Date.now(),item:fNeed.item,itemRu:fNeed.item,qty:fNeed.qty,desc:fNeed.desc,descRu:fNeed.desc,helpers:[],done:false}]);setFNeed({item:"",qty:"",desc:""});setModal(null);};
   const addHelp=()=>{if(!fHelp.desc.trim())return;const nm=fHelp.anon?(ua?"Анонімно":"Анонимно"):fHelp.name||user.name;setHelpReqs(p=>[{id:Date.now(),type:fHelp.type,anon:fHelp.anon,name:nm,nameRu:nm,desc:fHelp.desc,descRu:fHelp.desc,contact:fHelp.contact,date:today(),helpers:0},...p]);setFHelp({type:"food",anon:false,name:"",desc:"",contact:""});setModal(null);};
   const addTopSt=()=>{if(!fTopSt.name.trim()||!fTopSt.reason.trim())return;setTopSt(p=>[{id:Date.now(),name:fTopSt.name,nameRu:fTopSt.name,cat:fTopSt.cat,lvl:fTopSt.lvl,reason:fTopSt.reason,reasonRu:fTopSt.reason,date:today()},...p]);setFTopSt({name:"",cat:"grades",lvl:"gold",reason:""});setModal(null);};
@@ -642,7 +644,15 @@ function MainApp({lang,setLang,user,onChangeRole}){
 
   const togglePay=(cId,pId)=>setColls(p=>p.map(c=>c.id!==cId?c:{...c,payments:c.payments.map(pm=>pm.id!==pId?pm:{...pm,paid:!pm.paid})}));
   const joinVol=id=>setEvents(p=>p.map(e=>e.id!==id||e.vol.includes(user.name)?e:{...e,vol:[...e.vol,user.name]}));
-  const vote=(pid,idx)=>setPolls(p=>p.map(pl=>pl.id!==pid||pl.voted!==null?pl:{...pl,votes:pl.votes.map((v,i)=>i===idx?v+1:v),voted:idx}));
+  // voted зберігається локально (у кожного свій), не у Firebase
+  const [votedPolls,setVotedPolls]=useState(()=>{try{return JSON.parse(localStorage.getItem("rc_voted"))||{};}catch(e){return{};}});
+  const vote=(pid,idx)=>{
+    if(votedPolls[pid]!==undefined) return;
+    setPolls(p=>p.map(pl=>pl.id!==pid?pl:{...pl,votes:pl.votes.map((v,i)=>i===idx?v+1:v)}));
+    const next={...votedPolls,[pid]:idx};
+    setVotedPolls(next);
+    localStorage.setItem("rc_voted",JSON.stringify(next));
+  };
   const helpNeed=id=>setNeeds(p=>p.map(n=>n.id!==id?n:{...n,helpers:n.helpers.includes(user.name)?n.helpers:[...n.helpers,user.name]}));
   const helpReq=id=>setHelpReqs(p=>p.map(h=>h.id!==id?h:{...h,helpers:h.helpers+1}));
 
@@ -844,11 +854,14 @@ function MainApp({lang,setLang,user,onChangeRole}){
               {canFin&&<div className="flex justify-end mb-2"><Btn v="ghost" onClick={()=>setModal("exp")}>{t.fin.addExp}</Btn></div>}
               <div className="card">
                 {exps.map((e,i)=>(
-                  <div key={e.id} className={`flex items-center justify-between p-4 ${i>0?"border-t border-slate-50":""}`}>
-                    <div><p className="font-semibold text-slate-800 text-sm">{ua?e.desc:e.descRu}</p><p className="text-xs text-slate-400">{e.date}</p></div>
-                    <div className="flex items-center gap-2">
-                      <span className="font-black text-red-500">−{e.amount.toLocaleString()} {t.cur}</span>
-                      {canFin&&<button onClick={()=>setExps(p=>p.filter(x=>x.id!==e.id))} className="w-6 h-6 flex items-center justify-center rounded-lg bg-slate-100 hover:bg-red-100 text-slate-400 hover:text-red-500 text-xs transition-colors">✕</button>}
+                  <div key={e.id} className={`p-4 ${i>0?"border-t border-slate-50":""}`}>
+                    <div className="flex items-center justify-between">
+                      <div><p className="font-semibold text-slate-800 text-sm">{ua?e.desc:e.descRu}</p><p className="text-xs text-slate-400">{e.date}</p></div>
+                      <div className="flex items-center gap-2">
+                        {e.receipt&&<button onClick={()=>setPhotoModal({src:e.receipt,by:ua?"Чек":"Чек",date:e.date})} className="w-7 h-7 flex items-center justify-center rounded-lg bg-amber-50 hover:bg-amber-100 text-amber-500 text-sm transition-colors" title={ua?"Чек":"Чек"}>🧾</button>}
+                        <span className="font-black text-red-500">−{e.amount.toLocaleString()} {t.cur}</span>
+                        {canFin&&<button onClick={()=>setExps(p=>p.filter(x=>x.id!==e.id))} className="w-6 h-6 flex items-center justify-center rounded-lg bg-slate-100 hover:bg-red-100 text-slate-400 hover:text-red-500 text-xs transition-colors">✕</button>}
+                      </div>
                     </div>
                   </div>
                 ))}
@@ -859,7 +872,19 @@ function MainApp({lang,setLang,user,onChangeRole}){
             <div className="space-y-3"><Fld label={t.fin.colName}><input className={INP} value={fCol.name} onChange={e=>setFCol(f=>({...f,name:e.target.value}))}/></Fld><Fld label={t.fin.colAmt}><input className={INP} type="number" value={fCol.amount} onChange={e=>setFCol(f=>({...f,amount:e.target.value}))}/></Fld><div className="flex gap-2 pt-1"><Btn cls="flex-1 text-center" onClick={addCol}>{t.fin.create}</Btn><Btn v="sec" onClick={()=>setModal(null)}>{t.common.cancel}</Btn></div></div>
           </Modal>
           <Modal show={modal==="exp"} onClose={()=>setModal(null)} title={t.fin.addExp}>
-            <div className="space-y-3"><Fld label={t.fin.expDesc}><input className={INP} value={fExp.desc} onChange={e=>setFExp(f=>({...f,desc:e.target.value}))}/></Fld><Fld label={t.fin.expAmt}><input className={INP} type="number" value={fExp.amount} onChange={e=>setFExp(f=>({...f,amount:e.target.value}))}/></Fld><div className="flex gap-2 pt-1"><Btn cls="flex-1 text-center" onClick={addExp}>{t.common.add}</Btn><Btn v="sec" onClick={()=>setModal(null)}>{t.common.cancel}</Btn></div></div>
+            <div className="space-y-3">
+              <Fld label={t.fin.expDesc}><input className={INP} value={fExp.desc} onChange={e=>setFExp(f=>({...f,desc:e.target.value}))}/></Fld>
+              <Fld label={t.fin.expAmt}><input className={INP} type="number" value={fExp.amount} onChange={e=>setFExp(f=>({...f,amount:e.target.value}))}/></Fld>
+              <Fld label={ua?"Фото чеку (необов'язково)":"Фото чека (необязательно)"}>
+                <input ref={receiptRef} type="file" accept="image/*" className="hidden" onChange={handleReceipt}/>
+                <button type="button" onClick={()=>receiptRef.current&&receiptRef.current.click()} className={`w-full flex items-center gap-2 px-3 py-2 rounded-xl border-2 border-dashed transition-colors text-sm font-medium ${fExp.receipt?"border-emerald-400 bg-emerald-50 text-emerald-700":"border-slate-200 bg-slate-50 text-slate-500 hover:border-violet-400 hover:text-violet-600"}`}>
+                  <span className="text-base">{fExp.receipt?"✅":"📎"}</span>
+                  {fExp.receipt?(ua?"Чек додано — натисніть щоб змінити":"Чек добавлен — нажмите чтобы изменить"):(ua?"Додати фото чеку":"Добавить фото чека")}
+                </button>
+                {fExp.receipt&&<img src={fExp.receipt} alt="receipt" className="mt-2 w-full rounded-xl max-h-48 object-cover"/>}
+              </Fld>
+              <div className="flex gap-2 pt-1"><Btn cls="flex-1 text-center" onClick={addExp}>{t.common.add}</Btn><Btn v="sec" onClick={()=>setModal(null)}>{t.common.cancel}</Btn></div>
+            </div>
           </Modal>
         </div>
       )}
@@ -923,10 +948,11 @@ function MainApp({lang,setLang,user,onChangeRole}){
                     <div className="space-y-3">
                       {opts.map((opt,idx)=>{
                         const pct=total>0?Math.round(poll.votes[idx]/total*100):0;
-                        const isW=poll.votes[idx]===maxV&&total>0&&poll.voted!==null;
-                        const isMe=poll.voted===idx;
+                        const myVote=votedPolls[poll.id];
+                        const isW=poll.votes[idx]===maxV&&total>0&&myVote!==undefined;
+                        const isMe=myVote===idx;
                         return(
-                          <button key={idx} onClick={()=>vote(poll.id,idx)} disabled={poll.voted!==null||!poll.active} className="w-full text-left">
+                          <button key={idx} onClick={()=>vote(poll.id,idx)} disabled={myVote!==undefined||!poll.active} className="w-full text-left">
                             <div className="flex justify-between mb-1"><span className={`text-sm font-semibold ${isMe?"text-violet-600":isW?"text-emerald-600":"text-slate-700"}`}>{opt}</span><span className="text-xs text-slate-400 ml-2">{poll.votes[idx]} ({pct}%)</span></div>
                             <div className="w-full bg-slate-100 rounded-full h-2 overflow-hidden"><div className={`h-2 rounded-full transition-all duration-500 ${isMe?"bg-gradient-to-r from-violet-500 to-indigo-500":isW?"bg-gradient-to-r from-emerald-400 to-teal-500":"bg-slate-300"}`} style={{width:`${pct}%`}}/></div>
                           </button>
@@ -941,7 +967,7 @@ function MainApp({lang,setLang,user,onChangeRole}){
                         {canPost&&<button onClick={()=>setPolls(p=>p.filter(x=>x.id!==poll.id))} className="w-6 h-6 flex items-center justify-center rounded-lg bg-slate-100 hover:bg-red-100 text-slate-400 hover:text-red-500 transition-colors">✕</button>}
                       </div>
                     </div>
-                    {poll.voted===null&&poll.active?<p className="text-xs text-violet-500 font-semibold mt-2">{t.pol.hint}</p>:poll.voted!==null?<p className="text-xs text-emerald-600 font-semibold mt-2">{t.pol.voted}</p>:null}
+                    {votedPolls[poll.id]===undefined&&poll.active?<p className="text-xs text-violet-500 font-semibold mt-2">{t.pol.hint}</p>:votedPolls[poll.id]!==undefined?<p className="text-xs text-emerald-600 font-semibold mt-2">{t.pol.voted}</p>:null}
                   </div>
                 </div>
               );
