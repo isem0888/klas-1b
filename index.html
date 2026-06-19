@@ -645,13 +645,14 @@ function MainApp({lang,setLang,user,onChangeRole,onLogout}){
     ref.on('value',snap=>setHelpCounts(snap.val()||{}));
     return()=>ref.off('value');
   },[]);
-  const [resolvedCount,setResolvedCount]=useState(0);
+  const [stats,setStats]=useState({resolvedCount:0,pollsDone:0,eventsDone:0,needsDone:0,helpDone:0});
   useEffect(()=>{
     if(!window._db) return;
-    const ref=window._db.ref("klas1b/stats/resolvedCount");
-    ref.on('value',snap=>setResolvedCount(snap.val()||0));
+    const ref=window._db.ref("klas1b/stats");
+    ref.on('value',snap=>setStats(v=>({...v,...(snap.val()||{})})));
     return()=>ref.off('value');
   },[]);
+  const markDone=(key)=>{if(window._db)window._db.ref(`klas1b/stats/${key}`).transaction(v=>(v||0)+1).catch(()=>{});};
   const [showStats,setShowStats]=useState(false);
   const [finTab,setFinTab]=useState("coll");
   const [topTab,setTopTab]=useState("students");
@@ -948,7 +949,7 @@ function MainApp({lang,setLang,user,onChangeRole,onLogout}){
                   {a.media&&a.mediaType==="image"&&<img src={a.media} alt="" className="w-full rounded-xl mt-2 object-cover max-h-60"/>}
                   {a.media&&a.mediaType==="video"&&<video src={a.media} controls className="w-full rounded-xl mt-2 max-h-60" style={{maxHeight:"240px"}}/>}
                   {(ua?a.text:a.textRu)&&<p className="text-slate-600 text-sm mt-1.5 leading-relaxed">{ua?a.text:a.textRu}</p>}
-                  {a.callToHelp&&(()=>{const ah=toArr(a.helpers);const iH=ah.includes(user.name);return(<div className="mt-3 pt-2.5 border-t border-rose-100"><div className="flex items-center justify-between gap-2"><span className="text-xs text-rose-500 font-semibold">🤝 {ah.length} {ua?"відгукнулись":"откликнулись"}</span><div className="flex items-center gap-2">{a.resolved?<span className="text-xs font-bold text-emerald-600 bg-emerald-50 px-3 py-1.5 rounded-xl">✅ {ua?"Вирішено":"Решено"}</span>:<>{iH?<span className="text-xs font-bold text-rose-400 bg-rose-50 px-3 py-1.5 rounded-xl">✓ {ua?"Я відгукнувся":"Я откликнулся"}</span>:<button onClick={()=>{setAnn(p=>p.map(x=>x.id!==a.id?x:{...x,helpers:[...ah,user.name]}));if(window._db&&user.id)window._db.ref(`klas1b/helpCounts/${user.id}`).transaction(v=>(v||0)+1).catch(()=>{});}} className="text-xs font-bold px-3 py-1.5 rounded-xl bg-rose-500 text-white hover:bg-rose-600 transition-colors">{ua?"🙋 Відгукнутись":"🙋 Откликнуться"}</button>}{user.role==="chairman"&&<button onClick={()=>{setAnn(p=>p.map(x=>x.id!==a.id?x:{...x,resolved:true}));if(window._db)window._db.ref("klas1b/stats/resolvedCount").transaction(v=>(v||0)+1).catch(()=>{});}} className="text-xs font-bold px-3 py-1.5 rounded-xl bg-emerald-100 text-emerald-700 hover:bg-emerald-200 transition-colors">✅ {ua?"Вирішено":"Решено"}</button>}</> }</div></div></div>);})()}
+                  {a.callToHelp&&(()=>{const ah=toArr(a.helpers);const iH=ah.includes(user.name);return(<div className="mt-3 pt-2.5 border-t border-rose-100"><div className="flex items-center justify-between gap-2"><span className="text-xs text-rose-500 font-semibold">🤝 {ah.length} {ua?"відгукнулись":"откликнулись"}</span><div className="flex items-center gap-2">{a.resolved?<span className="text-xs font-bold text-emerald-600 bg-emerald-50 px-3 py-1.5 rounded-xl">✅ {ua?"Вирішено":"Решено"}</span>:<>{iH?<span className="text-xs font-bold text-rose-400 bg-rose-50 px-3 py-1.5 rounded-xl">✓ {ua?"Я відгукнувся":"Я откликнулся"}</span>:<button onClick={()=>{setAnn(p=>p.map(x=>x.id!==a.id?x:{...x,helpers:[...ah,user.name]}));if(window._db&&user.id)window._db.ref(`klas1b/helpCounts/${user.id}`).transaction(v=>(v||0)+1).catch(()=>{});}} className="text-xs font-bold px-3 py-1.5 rounded-xl bg-rose-500 text-white hover:bg-rose-600 transition-colors">{ua?"🙋 Відгукнутись":"🙋 Откликнуться"}</button>}{user.role==="chairman"&&<button onClick={()=>{setAnn(p=>p.map(x=>x.id!==a.id?x:{...x,resolved:true}));markDone("resolvedCount");}} className="text-xs font-bold px-3 py-1.5 rounded-xl bg-emerald-100 text-emerald-700 hover:bg-emerald-200 transition-colors">✅ {ua?"Вирішено":"Решено"}</button>}</> }</div></div></div>);})()}
                   <div className="flex justify-between mt-3 pt-2.5 border-t border-slate-50 text-xs text-slate-400"><span>{a.author}</span><span>{a.date}</span></div>
                 </div>
               </div>
@@ -1074,7 +1075,7 @@ function MainApp({lang,setLang,user,onChangeRole,onLogout}){
         <div>
           <div className="flex justify-between items-center mb-3"><h2 className="font-black text-slate-800 text-lg">{t.ev.title}</h2>{canPost&&<Btn onClick={()=>setModal("ev")}>{t.ev.add}</Btn>}</div>
           {upEv.length>0&&<><SL>{t.ev.up}</SL><div className="space-y-3 mb-2">{upEv.map(ev=>{const s=EVT_S[ev.type]||EVT_S.other;const evVol=ev.vol||[];const joined=evVol.includes(user.name);return(<div key={ev.id} className="card"><div className={`h-1.5 ${s.dot}`}/><div className="card-inner"><div className="flex items-start gap-3"><div className={`w-2.5 h-2.5 rounded-full mt-1 flex-shrink-0 ${s.dot}`}/><div className="flex-1"><h3 className="font-bold text-slate-900">{ua?ev.title:ev.titleRu}</h3><p className="text-xs text-slate-500 mt-0.5">{ev.date}{ev.time?` · ${ev.time}`:""}</p><span className={`inline-block mt-1.5 text-xs font-bold px-2.5 py-1 rounded-full ${s.bg} ${s.text}`}>{t.ev.types[ev.type]}</span></div>{canPost&&<div className="flex gap-1 flex-shrink-0"><button onClick={()=>{setEditEv({...ev});setModal("editEv");}} className="w-7 h-7 flex items-center justify-center rounded-lg bg-slate-100 hover:bg-blue-100 text-slate-400 hover:text-blue-500 text-sm transition-colors">✏️</button><button onClick={()=>delEv(ev.id)} className="w-7 h-7 flex items-center justify-center rounded-lg bg-slate-100 hover:bg-red-100 text-slate-400 hover:text-red-500 text-sm transition-colors">✕</button></div>}</div>{ev.type!=="birthday"&&<div className="mt-3 pt-3 border-t border-slate-50 flex items-center justify-between"><p className="text-xs text-slate-400">{t.ev.vol}: {evVol.length>0?evVol.join(", "):t.ev.noVol}</p>{joined?<button onClick={()=>leaveVol(ev.id)} className="text-xs font-bold px-3 py-1.5 rounded-xl transition-all bg-rose-100 text-rose-600 hover:bg-rose-200">{t.ev.leave}</button>:<button onClick={()=>joinVol(ev.id)} className="text-xs font-bold px-3 py-1.5 rounded-xl transition-all bg-violet-100 text-violet-700 hover:bg-violet-200">{t.ev.join}</button>}</div>}</div></div>);})}</div></>}
-          {pastEv.length>0&&<><SL>{t.ev.past}</SL><div className="space-y-2 mb-2">{pastEv.map(ev=>{const s=EVT_S[ev.type]||EVT_S.other;return(<div key={ev.id} className="card opacity-60"><div className="card-inner flex items-center gap-3 py-3"><div className={`w-2 h-2 rounded-full flex-shrink-0 ${s.dot}`}/><div className="flex-1"><p className="text-sm font-semibold text-slate-700">{ua?ev.title:ev.titleRu}</p><p className="text-xs text-slate-400">{ev.date}</p></div><span className={`text-xs font-bold px-2 py-0.5 rounded-full ${s.bg} ${s.text}`}>{t.ev.types[ev.type]}</span></div></div>);})}</div></>}
+          {pastEv.length>0&&<><SL>{t.ev.past}</SL><div className="space-y-2 mb-2">{pastEv.map(ev=>{const s=EVT_S[ev.type]||EVT_S.other;return(<div key={ev.id} className="card opacity-70"><div className="card-inner flex items-center gap-3 py-3"><div className={`w-2 h-2 rounded-full flex-shrink-0 ${s.dot}`}/><div className="flex-1"><p className="text-sm font-semibold text-slate-700">{ua?ev.title:ev.titleRu}</p><p className="text-xs text-slate-400">{ev.date}</p></div><div className="flex items-center gap-1">{ev.resolved?<span className="text-xs font-bold text-emerald-600 bg-emerald-50 px-2 py-0.5 rounded-lg">✅</span>:user.role==="chairman"&&<button onClick={()=>{setEvents(p=>p.map(x=>x.id!==ev.id?x:{...x,resolved:true}));markDone("eventsDone");}} className="text-xs font-bold px-2 py-0.5 rounded-lg bg-emerald-100 hover:bg-emerald-200 text-emerald-700 transition-colors">✅</button>}<span className={`text-xs font-bold px-2 py-0.5 rounded-full ${s.bg} ${s.text}`}>{t.ev.types[ev.type]}</span>{canPost&&<button onClick={()=>delEv(ev.id)} className="w-6 h-6 flex items-center justify-center rounded-lg bg-slate-100 hover:bg-red-100 text-slate-400 hover:text-red-500 text-xs transition-colors">✕</button>}</div></div></div>);})}</div></>}
           <SL>{t.ev.bdays}</SL>
           <div className="card"><div className="card-inner p-0">{childBdays.length===0?<p className="text-slate-400 text-sm text-center py-4">{ua?"Дні народження з'являться після реєстрації батьків":"Дни рождения появятся после регистрации родителей"}</p>:childBdays.map((b,i)=>{const d=bDaysUntil(b.d);return(<div key={i} className={`flex items-center justify-between p-4 ${i>0?"border-t border-slate-50":""}`}><div><p className="font-semibold text-slate-800 text-sm">🎂 {ua?b.n:b.nRu}</p><p className="text-xs text-slate-400">{b.d}</p></div><span className={`text-xs font-bold px-3 py-1 rounded-full ${d===0?"bg-rose-100 text-rose-600":d<=7?"bg-amber-100 text-amber-700":"bg-slate-100 text-slate-500"}`}>{d===0?t.ev.today:t.ev.inDays.replace("{n}",d)}</span></div>);})}</div></div>
           <Modal show={modal==="ev"} onClose={()=>setModal(null)} title={t.ev.newEv}>
@@ -1145,6 +1146,8 @@ function MainApp({lang,setLang,user,onChangeRole,onLogout}){
                       <div className="flex items-center gap-2">
                         {poll.deadline&&<span>⏰ {poll.deadline}</span>}
                         {canPost&&<button onClick={()=>setPolls(p=>p.map(x=>x.id===poll.id?{...x,active:!x.active}:x))} className="px-2 py-1 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-500 transition-colors">{poll.active?(ua?"Закрити":"Закрыть"):(ua?"Відкрити":"Открыть")}</button>}
+                        {user.role==="chairman"&&!poll.resolved&&<button onClick={()=>{setPolls(p=>p.map(x=>x.id!==poll.id?x:{...x,resolved:true,active:false}));markDone("pollsDone");}} className="px-2 py-1 rounded-lg bg-emerald-100 hover:bg-emerald-200 text-emerald-700 text-xs font-bold transition-colors">✅</button>}
+                        {poll.resolved&&<span className="text-xs font-bold text-emerald-600 bg-emerald-50 px-2 py-1 rounded-lg">✅</span>}
                         {canPost&&<button onClick={()=>setPolls(p=>p.filter(x=>x.id!==poll.id))} className="w-6 h-6 flex items-center justify-center rounded-lg bg-slate-100 hover:bg-red-100 text-slate-400 hover:text-red-500 transition-colors">✕</button>}
                       </div>
                     </div>
@@ -1352,7 +1355,7 @@ function MainApp({lang,setLang,user,onChangeRole,onLogout}){
                     <div className="mt-3 pt-3 border-t border-slate-50 flex items-center justify-between">
                       <span className="text-xs text-slate-400">{nh.length>0?<>🙋 {nh.join(", ")}</>:""}</span>
                       <div className="flex gap-2">
-                        {canPost&&<button onClick={()=>setNeeds(p=>p.map(x=>x.id===n.id?{...x,done:!x.done}:x))} className="text-xs font-bold px-2.5 py-1 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-600 transition-colors">✓</button>}
+                        {canPost&&<button onClick={()=>{const nd=!n.done;setNeeds(p=>p.map(x=>x.id===n.id?{...x,done:nd}:x));if(nd&&user.role==="chairman")markDone("needsDone");}} className={`text-xs font-bold px-2.5 py-1 rounded-xl transition-colors ${n.done?"bg-emerald-100 text-emerald-700":"bg-slate-100 hover:bg-slate-200 text-slate-600"}`}>{n.done?"✅":"✓"}</button>}
                         <button onClick={()=>helpNeed(n.id)} disabled={iHelp||n.done} className={`text-xs font-bold px-3 py-1.5 rounded-xl transition-all ${iHelp?"bg-emerald-100 text-emerald-700":"bg-orange-100 text-orange-700 hover:bg-orange-200"}`}>
                           {iHelp?t.needs.helped:t.needs.canHelp}
                         </button>
@@ -1410,7 +1413,7 @@ function MainApp({lang,setLang,user,onChangeRole,onLogout}){
                   </div>
                   <p className="text-slate-600 text-sm leading-relaxed">{ua?h.desc:h.descRu}</p>
                   {h.contact&&<p className="text-xs text-slate-400 mt-1.5">📞 {h.contact}</p>}
-                  {(()=>{const hh=toArr(h.helpers);const iH=hh.includes(user.name);return(<div className="mt-3 pt-3 border-t border-slate-50 flex items-center justify-between"><span className="text-xs text-slate-400">{hh.length} {t.help.helped}</span>{iH?<span className="text-xs font-bold text-rose-400 bg-rose-50 px-3 py-1.5 rounded-xl">✓ {ua?"Я відгукнувся":"Я откликнулся"}</span>:<button onClick={()=>helpReq(h.id)} className="text-xs font-bold px-3 py-1.5 rounded-xl bg-rose-50 text-rose-600 hover:bg-rose-100 transition-colors">{t.help.canHelp}</button>}</div>);})()}
+                  {(()=>{const hh=toArr(h.helpers);const iH=hh.includes(user.name);return(<div className="mt-3 pt-3 border-t border-slate-50 flex items-center justify-between gap-2"><span className="text-xs text-slate-400">{hh.length} {t.help.helped}</span><div className="flex items-center gap-2">{h.resolved?<span className="text-xs font-bold text-emerald-600 bg-emerald-50 px-3 py-1.5 rounded-xl">✅ {ua?"Вирішено":"Решено"}</span>:<>{user.role==="chairman"&&<button onClick={()=>{setHelpReqs(p=>p.map(x=>x.id!==h.id?x:{...x,resolved:true}));markDone("helpDone");}} className="text-xs font-bold px-3 py-1.5 rounded-xl bg-emerald-100 text-emerald-700 hover:bg-emerald-200 transition-colors">✅</button>}{iH?<span className="text-xs font-bold text-rose-400 bg-rose-50 px-3 py-1.5 rounded-xl">✓ {ua?"Я відгукнувся":"Я откликнулся"}</span>:<button onClick={()=>helpReq(h.id)} className="text-xs font-bold px-3 py-1.5 rounded-xl bg-rose-50 text-rose-600 hover:bg-rose-100 transition-colors">{t.help.canHelp}</button>}</>}</div></div>);})()}
                 </div>
               </div>
             ))}
@@ -1539,12 +1542,12 @@ function MainApp({lang,setLang,user,onChangeRole,onLogout}){
         const helpYear=helpReqs.filter(h=>byYr(h.id)).length;
         const needDone=needs.filter(n=>n.done).length;
         const rows=[
-          {icon:"✅",label:ua?"Вирішено питань":"Решено вопросов",val:resolvedCount,sub:ua?"через заклики в оголошеннях":"через призывы в объявлениях"},
+          {icon:"✅",label:ua?"Вирішено оголошень":"Решено объявлений",val:stats.resolvedCount||0,sub:ua?"заклики до допомоги закриті головою":"призывы к помощи закрытые председателем"},
           {icon:"💰",label:ua?"Зібрано коштів":"Собрано средств",val:`${totColl.toLocaleString()} грн`,sub:ua?`Витрачено: ${totExp.toLocaleString()} грн • Залишок: ${(totColl-totExp).toLocaleString()} грн`:`Потрачено: ${totExp.toLocaleString()} грн • Остаток: ${(totColl-totExp).toLocaleString()} грн`},
-          {icon:"📅",label:ua?"Подій у "+yr:"Событий в "+yr,val:evYear,sub:ua?"запланованих та проведених":"запланированных и проведённых"},
-          {icon:"🗳",label:ua?"Опитувань у "+yr:"Опросов в "+yr,val:pollYear,sub:ua?"голосувань серед батьків":"голосований среди родителей"},
-          {icon:"📋",label:ua?"Потреб класу":"Нужд класса",val:needYear,sub:ua?`Виконано: ${needDone} з ${needYear}`:`Выполнено: ${needDone} из ${needYear}`},
-          {icon:"🤝",label:ua?"Запитів допомоги":"Запросов помощи",val:helpYear,sub:ua?"відгукнулись батьки":"откликнулись родители"},
+          {icon:"📅",label:ua?"Подій завершено":"Событий завершено",val:stats.eventsDone||0,sub:ua?`Всього у ${yr}: ${evYear}`:`Всего в ${yr}: ${evYear}`},
+          {icon:"🗳",label:ua?"Опитувань завершено":"Опросов завершено",val:stats.pollsDone||0,sub:ua?`Всього у ${yr}: ${pollYear}`:`Всего в ${yr}: ${pollYear}`},
+          {icon:"📋",label:ua?"Потреб виконано":"Нужд выполнено",val:stats.needsDone||0,sub:ua?`Всього у ${yr}: ${needYear}`:`Всего в ${yr}: ${needYear}`},
+          {icon:"🤝",label:ua?"Запитів вирішено":"Запросов решено",val:stats.helpDone||0,sub:ua?`Всього у ${yr}: ${helpYear}`:`Всего в ${yr}: ${helpYear}`},
         ];
         return(
           <div className="fixed inset-0 bg-black/60 z-50 flex items-end justify-center p-4" onClick={()=>setShowStats(false)}>
