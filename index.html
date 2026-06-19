@@ -1532,10 +1532,11 @@ function MainApp({lang,setLang,user,onChangeRole,onLogout}){
       {/* ── СТАТИСТИКА МОДАЛ ─────────────────────────────────────────── */}
       {showStats&&(()=>{
         const yr=new Date().getFullYear().toString();
-        const evYear=events.filter(e=>e.date&&e.date.startsWith(yr)).length;
-        const pollYear=polls.filter(p=>p.date&&p.date.startsWith(yr)).length;
-        const needYear=needs.filter(n=>n.date&&n.date.startsWith(yr)||(!n.date&&String(new Date(n.id||0).getFullYear())===yr)).length;
-        const helpYear=helpReqs.filter(h=>h.date&&h.date.startsWith(yr)).length;
+        const byYr=id=>String(new Date(Number(id)||0).getFullYear())===yr;
+        const evYear=events.filter(e=>byYr(e.id)).length;
+        const pollYear=polls.filter(p=>byYr(p.id)).length;
+        const needYear=needs.filter(n=>byYr(n.id)).length;
+        const helpYear=helpReqs.filter(h=>byYr(h.id)).length;
         const needDone=needs.filter(n=>n.done).length;
         const rows=[
           {icon:"✅",label:ua?"Вирішено питань":"Решено вопросов",val:resolvedCount,sub:ua?"через заклики в оголошеннях":"через призывы в объявлениях"},
