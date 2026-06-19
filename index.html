@@ -78,6 +78,17 @@ try {
       if (cfg.tgToken) window.TG_BOT_TOKEN  = cfg.tgToken;
       if (cfg.tgChat)  window.TG_ADMIN_CHAT = String(cfg.tgChat);
     }
+    // Seed teachers — оновлюємо якщо менше 4 записів
+    const existingCount = cfg && cfg.teachers ? Object.keys(cfg.teachers).length : 0;
+    if (existingCount < 4) {
+      const seedTeachers = {
+        1: {id:1, n:"Вітковська Ірина Олександрівна",  nRu:"Витковская Ирина Александровна",  s:"Директор",                              sRu:"Директор",                              p:""},
+        2: {id:2, n:"Говоруха Ірина Вікторівна",       nRu:"Говоруха Ирина Викторовна",       s:"Класний керівник",                      sRu:"Классный руководитель",                 p:"+380 96 271 99 25"},
+        3: {id:3, n:"Троцько Дар'я Дмитрівна",         nRu:"Троцько Дарья Дмитриевна",        s:"Адміністратор / Касир",                 sRu:"Администратор / Кассир",                p:"099 946 94 92"},
+        4: {id:4, n:"Семенов Ігор Леонідович",          nRu:"Семенов Игорь Леонидович",        s:"Голова батьківського комітету 1-Б",     sRu:"Глава родительского комитета 1-Б",      p:"099 478 64 59"}
+      };
+      window._db.ref("klas1b/teachers").set(seedTeachers).catch(()=>{});
+    }
   });
 } catch(e) {
   window._db = null;
@@ -1082,20 +1093,23 @@ function MainApp({lang,setLang,user,onChangeRole,onLogout}){
             <SL>{t.doc.teach}</SL>
             {canPost&&<button onClick={()=>setModal("addTeacher")} className="text-xs text-violet-600 font-bold hover:underline">+ {ua?"Додати":"Добавить"}</button>}
           </div>
-          <div className="card mb-4">
-            {teachers.length===0&&<div className="p-4 text-center text-slate-400 text-sm">{ua?"Склад не заповнений":"Состав не заполнен"}</div>}
+          {teachers.length===0&&<div className="card p-4 text-center text-slate-400 text-sm mb-4">{ua?"Склад не заповнений":"Состав не заполнен"}</div>}
+          <div className="space-y-3 mb-4">
             {teachers.map((tc,i)=>(
-              <div key={tc.id||i} className={`flex items-center gap-3 p-4 ${i>0?"border-t border-slate-50":""}`}>
-                <Av name={ua?tc.n:tc.nRu} sz="sm"/>
-                <div className="flex-1">
-                  <p className="font-semibold text-slate-800 text-sm">{ua?tc.n:tc.nRu}</p>
-                  <p className="text-xs text-slate-500">{ua?tc.s:tc.sRu}</p>
-                  <p className="text-xs text-slate-400">{tc.p}</p>
+              <div key={tc.id||i} className="card overflow-hidden">
+                <div className="h-1 bg-gradient-to-r from-violet-500 to-indigo-500"/>
+                <div className="flex items-center gap-3 p-4">
+                  <Av name={ua?tc.n:tc.nRu} sz="sm"/>
+                  <div className="flex-1">
+                    <p className="font-semibold text-slate-800 text-sm">{ua?tc.n:tc.nRu}</p>
+                    <p className="text-xs text-violet-600 font-medium mt-0.5">{ua?tc.s:tc.sRu}</p>
+                    {tc.p&&<p className="text-xs text-slate-500 mt-0.5">{tc.p}</p>}
+                  </div>
+                  {canPost&&<div className="flex gap-1">
+                    <button onClick={()=>{setEditTeacher({...tc});setModal("editTeacher");}} className="w-7 h-7 flex items-center justify-center rounded-lg bg-slate-100 hover:bg-blue-100 text-slate-400 hover:text-blue-500 text-sm transition-colors">✏️</button>
+                    <button onClick={()=>setTeachers(p=>p.filter(x=>x.id!==tc.id))} className="w-7 h-7 flex items-center justify-center rounded-lg bg-slate-100 hover:bg-red-100 text-slate-400 hover:text-red-500 text-sm transition-colors">✕</button>
+                  </div>}
                 </div>
-                {canPost&&<div className="flex gap-1">
-                  <button onClick={()=>{setEditTeacher({...tc});setModal("editTeacher");}} className="w-7 h-7 flex items-center justify-center rounded-lg bg-slate-100 hover:bg-blue-100 text-slate-400 hover:text-blue-500 text-sm transition-colors">✏️</button>
-                  <button onClick={()=>setTeachers(p=>p.filter(x=>x.id!==tc.id))} className="w-7 h-7 flex items-center justify-center rounded-lg bg-slate-100 hover:bg-red-100 text-slate-400 hover:text-red-500 text-sm transition-colors">✕</button>
-                </div>}
               </div>
             ))}
           </div>
