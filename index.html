@@ -385,7 +385,7 @@ function RegScreen({lang,setLang,onReg}){
   const _tgUser=_parseTgUser();
   const tgAutoUser=_tgUser?.username||"";
   const tgAutoId=_tgUser?.id?Number(_tgUser.id):null;
-  const [form,setForm]=useState({name:"",phone:"+380",phone2:"",child:"",childBirthday:"",role:"parent",pass:"",photo:"",tgUsername:tgAutoUser,tgChatId:tgAutoId?String(tgAutoId):""});
+  const [form,setForm]=useState({name:"",phone:"+380",phone2:"+380",child:"",childBirthday:"",role:"parent",pass:"",photo:"",tgUsername:tgAutoUser,tgChatId:tgAutoId?String(tgAutoId):""});
   const [c1,setC1]=useState(false);const[c2,setC2]=useState(false);
   const [err,setErr]=useState("");const[errNoTg,setErrNoTg]=useState(false);const[showTgHint,setShowTgHint]=useState(false);const[cm,setCm]=useState(null);
   const photoRef=useRef(null);
@@ -490,7 +490,7 @@ function RegScreen({lang,setLang,onReg}){
           </Fld>
           <Fld label={r.name}><input className={INP} placeholder={r.name} value={form.name} onChange={e=>set("name",e.target.value)}/></Fld>
           <Fld label={r.phone}><input className={INP} placeholder="+380 00 000 00 00" value={form.phone} onChange={e=>{const v=e.target.value;set("phone",v.startsWith("+380")?v:"+380");}}/></Fld>
-          <Fld label={lang==="ua"?"Додатковий телефон (необов'язково)":"Дополнительный телефон (необязательно)"}><input className={INP} placeholder="+380 00 000 00 00" value={form.phone2} onChange={e=>set("phone2",e.target.value)}/></Fld>
+          <Fld label={lang==="ua"?"Додатковий телефон (необов'язково)":"Дополнительный телефон (необязательно)"}><input className={INP} placeholder="+380 00 000 00 00" value={form.phone2} onChange={e=>{const v=e.target.value;set("phone2",v.startsWith("+380")?v:"+380");}}/></Fld>
           <Fld label={r.child}><input className={INP} placeholder={r.child} value={form.child} onChange={e=>set("child",e.target.value)}/></Fld>
           <Fld label={r.childBday}><input className={INP} type="date" value={form.childBirthday} onChange={e=>set("childBirthday",e.target.value)}/></Fld>
           <Fld label={lang==="ua"?"Telegram юзернейм *":"Telegram username *"}>
