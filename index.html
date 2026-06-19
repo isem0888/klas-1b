@@ -337,8 +337,10 @@ function RegScreen({lang,setLang,onReg}){
     rd.readAsDataURL(f);
     e.target.value="";
   };
+  const canSubmit=c1&&c2;
   const submit=()=>{
-    if(!form.name.trim()||!form.child.trim()||!c1||!c2){setErr(r.err);return;}
+    if(!form.name.trim()||!form.child.trim()||!form.tgUsername.trim()){setErr(lang==="ua"?"Заповніть всі обов'язкові поля (ім'я, дитина, Telegram)":"Заполните все обязательные поля (имя, ребёнок, Telegram)");return;}
+    if(!c1||!c2){setErr(r.err);return;}
     if(needPass&&form.pass!==ROLE_PASSWORDS[form.role]){setErr(r.wrongPass);return;}
     const roleNames={parent:"Батько/Мати",teacher:"Вчитель",admin:"Адміністратор",chairman:"Голова комітету"};
     const tgU=form.tgUsername.replace(/^@/,"").trim();
@@ -356,7 +358,21 @@ function RegScreen({lang,setLang,onReg}){
         }).catch(()=>{});
       }
       if(isNew){
-        sendTgMsg(`🆕 <b>Нова реєстрація — 1Б клас</b>\n\n👤 <b>${form.name}</b>\n👦 Дитина: ${form.child}${form.childBirthday?"\n🎂 Д/н: "+form.childBirthday:""}\n📞 Тел: ${form.phone||"—"}\n🏷 Роль: ${roleNames[form.role]}\n🕐 ${new Date().toLocaleString("uk-UA")}`);
+        const msg=`🆕 <b>Нова реєстрація — 1Б клас</b>\n\n👤 <b>${form.name}</b>\n👦 Дитина: ${form.child}${form.childBirthday?"\n🎂 Д/н: "+form.childBirthday:""}\n📞 Тел: ${form.phone||"—"}\n🏷 Роль: ${roleNames[form.role]}\n🕐 ${new Date().toLocaleString("uk-UA")}`;
+        // Читаємо токен напряму з Firebase (уникаємо проблеми з несинхронізованим кешем)
+        if(window._db){
+          window._db.ref("klas1b").once("value", snap=>{
+            const cfg=snap.val();
+            if(cfg && cfg.tgToken && cfg.tgChat){
+              fetch(`https://api.telegram.org/bot${cfg.tgToken}/sendMessage`,{
+                method:"POST",headers:{"Content-Type":"application/json"},
+                body:JSON.stringify({chat_id:String(cfg.tgChat),text:msg,parse_mode:"HTML"})
+              }).catch(()=>{});
+            }
+          }).catch(()=>{});
+        } else {
+          sendTgMsg(msg); // fallback
+        }
       }
       requestNotifPerm();
       onReg(u);
@@ -406,7 +422,7 @@ function RegScreen({lang,setLang,onReg}){
           <Fld label={r.phone}><input className={INP} placeholder="+380 00 000 00 00" value={form.phone} onChange={e=>set("phone",e.target.value)}/></Fld>
           <Fld label={r.child}><input className={INP} placeholder={r.child} value={form.child} onChange={e=>set("child",e.target.value)}/></Fld>
           <Fld label={r.childBday}><input className={INP} type="date" value={form.childBirthday} onChange={e=>set("childBirthday",e.target.value)}/></Fld>
-          <Fld label={lang==="ua"?"Telegram юзернейм (необов'язково)":"Telegram username (необязательно)"}>
+          <Fld label={lang==="ua"?"Telegram юзернейм *":"Telegram username *"}>
             <div className="relative">
               <span className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 font-bold text-sm">@</span>
               <input className={INP} style={{paddingLeft:"1.75rem"}} placeholder="username" value={form.tgUsername} onChange={e=>set("tgUsername",e.target.value.replace(/^@/,""))}/>
@@ -432,7 +448,11 @@ function RegScreen({lang,setLang,onReg}){
             ✅ {lang==="ua"?"Telegram визначено — будете отримувати сповіщення про нові оголошення.":"Telegram определён — будете получать уведомления о новых объявлениях."}
           </div>}
           {err&&<p className="text-rose-500 text-xs font-medium">{err}</p>}
-          <Btn cls="w-full text-center justify-center" onClick={submit}>{r.submit}</Btn>
+          <button
+            onClick={submit}
+            disabled={!canSubmit}
+            className={`w-full py-3 rounded-xl text-sm font-bold transition-all ${canSubmit?"bg-gradient-to-r from-violet-600 to-indigo-600 text-white shadow-md shadow-violet-200 hover:from-violet-700 hover:to-indigo-700":"bg-slate-200 text-slate-400 cursor-not-allowed"}`}
+          >{r.submit}</button>
         </div>
       </div>
       {[1,2].map(idx=>(
