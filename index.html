@@ -385,7 +385,7 @@ function RegScreen({lang,setLang,onReg}){
   const _tgUser=_parseTgUser();
   const tgAutoUser=_tgUser?.username||"";
   const tgAutoId=_tgUser?.id?Number(_tgUser.id):null;
-  const [form,setForm]=useState({name:"",phone:"+380",phone2:"",child:"",childBirthday:"",role:"parent",pass:"",photo:"",tgUsername:tgAutoUser});
+  const [form,setForm]=useState({name:"",phone:"+380",phone2:"",child:"",childBirthday:"",role:"parent",pass:"",photo:"",tgUsername:tgAutoUser,tgChatId:tgAutoId?String(tgAutoId):""});
   const [c1,setC1]=useState(false);const[c2,setC2]=useState(false);
   const [err,setErr]=useState("");const[errNoTg,setErrNoTg]=useState(false);const[showTgHint,setShowTgHint]=useState(false);const[cm,setCm]=useState(null);
   const photoRef=useRef(null);
@@ -419,12 +419,13 @@ function RegScreen({lang,setLang,onReg}){
       } else sendTgMsg(msg);
     };
     const doReg=(finalId, existing)=>{
-      const u={id:finalId,name:existing?existing.name:form.name,phone:existing?existing.phone:form.phone,child:existing?existing.child:form.child,childRu:existing?existing.child:form.child,childBirthday:form.childBirthday,role:existing?existing.role:form.role,photo:form.photo||existing?.photo||"",tgUsername:tgU,tgId:tgAutoId};
+      const finalTgId=tgAutoId||(form.tgChatId.trim()?Number(form.tgChatId.trim()):null)||null;
+      const u={id:finalId,name:existing?existing.name:form.name,phone:existing?existing.phone:form.phone,child:existing?existing.child:form.child,childRu:existing?existing.child:form.child,childBirthday:form.childBirthday,role:existing?existing.role:form.role,photo:form.photo||existing?.photo||"",tgUsername:tgU,tgId:finalTgId};
       localStorage.setItem("rc_user",JSON.stringify(u));
       if(window._db){
         if(existing){
           // Оновлюємо існуючий запис — лише змінені поля
-          const upd={tgUsername:tgU,tgId:tgAutoId||null,registeredAt:Date.now()};
+          const upd={tgUsername:tgU,tgId:finalTgId||null,registeredAt:Date.now()};
           if(phone2clean) upd.phone2=phone2clean;
           if(form.photo) upd.photo=form.photo;
           window._db.ref(`${DB_ROOT}/parents/${finalId}`).update(upd).catch(()=>{});
@@ -435,7 +436,7 @@ function RegScreen({lang,setLang,onReg}){
           window._db.ref(`${DB_ROOT}/parents/${finalId}`).set({
             id:finalId,name:form.name,nameRu:form.name,child:form.child,childRu:form.child,
             childBirthday:form.childBirthday,phone:form.phone,phone2:phone2clean,
-            role:form.role,photo:form.photo||"",tgUsername:tgU,tgId:tgAutoId||null,
+            role:form.role,photo:form.photo||"",tgUsername:tgU,tgId:finalTgId||null,
             comment:"",registeredAt:Date.now()
           }).catch(()=>{});
           sendRegNotif(form.name,form.child,form.childBirthday,form.phone,form.role);
@@ -499,6 +500,20 @@ function RegScreen({lang,setLang,onReg}){
             </div>
             {tgAutoUser&&<p className="text-xs text-emerald-600 mt-1 font-medium">✓ {lang==="ua"?"Визначено автоматично з Telegram":"Определён автоматически из Telegram"}</p>}
           </Fld>
+          <Fld label={lang==="ua"?"Telegram ID (для сповіщень)":"Telegram ID (для уведомлений)"}>
+            <input className={INP} type="number" placeholder="123456789"
+              value={form.tgChatId} onChange={e=>set("tgChatId",e.target.value)}
+              readOnly={!!tgAutoId}
+            />
+            {tgAutoId
+              ? <p className="text-xs text-emerald-600 mt-1 font-medium">✓ {lang==="ua"?"Визначено автоматично":"Определён автоматически"}</p>
+              : <p className="text-xs text-slate-500 mt-1 leading-snug">
+                  {lang==="ua"
+                    ? <>Знайдіть свій ID: напишіть боту <b>@userinfobot</b> → скопіюйте цифри після «Id:»</>
+                    : <>Найдите свой ID: напишите боту <b>@userinfobot</b> → скопируйте цифры после «Id:»</>}
+                </p>
+            }
+          </Fld>
           <Fld label={r.role}><select className={INP} value={form.role} onChange={e=>set("role",e.target.value)}>{Object.entries(t.roles).map(([k,v])=><option key={k} value={k}>{v}</option>)}</select></Fld>
           {needPass&&<Fld label={r.pass}><input className={INP} type="password" placeholder={r.passHint} value={form.pass} onChange={e=>set("pass",e.target.value)}/></Fld>}
           <div className="pt-2 space-y-3 border-t border-slate-100">
@@ -511,12 +526,14 @@ function RegScreen({lang,setLang,onReg}){
               </div>
             ))}
           </div>
-          {!tgAutoId&&<div className="bg-blue-50 border border-blue-200 rounded-xl p-3 text-xs text-blue-700 leading-relaxed">
-            💬 {lang==="ua"?"Щоб отримувати сповіщення у Telegram — спочатку запустіть бота: натисніть /start у чаті з ботом класу.":"Чтобы получать уведомления в Telegram — сначала запустите бота: нажмите /start в чате с ботом класса."}
-          </div>}
-          {tgAutoId&&<div className="bg-emerald-50 border border-emerald-200 rounded-xl p-3 text-xs text-emerald-700">
-            ✅ {lang==="ua"?"Telegram визначено — будете отримувати сповіщення про нові оголошення.":"Telegram определён — будете получать уведомления о новых объявлениях."}
-          </div>}
+          {(tgAutoId||form.tgChatId.trim())
+            ? <div className="bg-emerald-50 border border-emerald-200 rounded-xl p-3 text-xs text-emerald-700">
+                ✅ {lang==="ua"?"Telegram визначено — будете отримувати сповіщення про нові оголошення.":"Telegram определён — будете получать уведомления о новых объявлениях."}
+              </div>
+            : <div className="bg-amber-50 border border-amber-200 rounded-xl p-3 text-xs text-amber-700 leading-relaxed">
+                ⚠️ {lang==="ua"?"Без Telegram ID сповіщення не прийдуть. Введіть ID вище або запустіть бота з мобільного Telegram.":"Без Telegram ID уведомления не придут. Введите ID выше или запустите бота с мобильного Telegram."}
+              </div>
+          }
           {err&&<p className="text-rose-500 text-xs font-medium">{err}{errNoTg&&<> — <button type="button" onClick={()=>setShowTgHint(h=>!h)} className="underline font-bold text-blue-500 hover:text-blue-700">{lang==="ua"?"додати username":"добавить username"}</button></>}</p>}
           {showTgHint&&<div className="bg-blue-50 border border-blue-200 rounded-xl p-3 text-xs text-blue-800 space-y-2">
             <p className="font-bold">{lang==="ua"?"Як додати username в Telegram:":"Как добавить username в Telegram:"}</p>
