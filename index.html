@@ -335,7 +335,7 @@ const CAN_FIN=["admin"];
 const CAN_SCHED=["teacher"];
 
 // ── UTILS ─────────────────────────────────────────────────────────────────────
-const today=()=>new Date().toISOString().split("T")[0];
+const today=()=>{const d=new Date();return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;};
 const daysUntil=d=>Math.ceil((new Date(d)-new Date(today()))/86400000);
 const INI=n=>n.split(" ").slice(0,2).map(w=>w[0]).join("").toUpperCase();
 const AVT_CLR=n=>["bg-violet-200 text-violet-800","bg-blue-200 text-blue-800","bg-emerald-200 text-emerald-800","bg-amber-200 text-amber-800","bg-rose-200 text-rose-800"][n.charCodeAt(0)%5];
