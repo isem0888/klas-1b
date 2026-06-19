@@ -352,8 +352,10 @@ function PhoneNum({phone}){
 function RegScreen({lang,setLang,onReg}){
   const t=L[lang];const r=t.reg;
   // Автоматично беремо TG username та id із WebApp
-  const tgAutoUser=window.Telegram?.WebApp?.initDataUnsafe?.user?.username||"";
-  const tgAutoId=window.Telegram?.WebApp?.initDataUnsafe?.user?.id||null;
+  const _parseTgUser=()=>{try{const u=window.Telegram?.WebApp?.initDataUnsafe?.user;if(u&&u.id)return u;const raw=window.Telegram?.WebApp?.initData;if(!raw)return null;const p=new URLSearchParams(raw);const s=p.get('user');if(!s)return null;return JSON.parse(s);}catch(e){return null;}};
+  const _tgUser=_parseTgUser();
+  const tgAutoUser=_tgUser?.username||"";
+  const tgAutoId=_tgUser?.id?Number(_tgUser.id):null;
   const [form,setForm]=useState({name:"",phone:"+380",phone2:"",child:"",childBirthday:"",role:"parent",pass:"",photo:"",tgUsername:tgAutoUser});
   const [c1,setC1]=useState(false);const[c2,setC2]=useState(false);
   const [err,setErr]=useState("");const[errNoTg,setErrNoTg]=useState(false);const[showTgHint,setShowTgHint]=useState(false);const[cm,setCm]=useState(null);
@@ -653,7 +655,7 @@ function MainApp({lang,setLang,user,onChangeRole,onLogout}){
 
   // Автоматично зберігаємо tgId якщо він є в WebApp але не збережений у Firebase
   useEffect(()=>{
-    const tgId=window.Telegram?.WebApp?.initDataUnsafe?.user?.id;
+    let tgId=null;try{const u=window.Telegram?.WebApp?.initDataUnsafe?.user;if(u&&u.id){tgId=Number(u.id);}else{const raw=window.Telegram?.WebApp?.initData;if(raw){const p=new URLSearchParams(raw);const s=p.get('user');if(s){const obj=JSON.parse(s);if(obj.id)tgId=Number(obj.id);}}}}catch(e){}
     if(!tgId||!user?.id||!window._db) return;
     window._db.ref(`klas1b/parents/${user.id}/tgId`).once("value",snap=>{
       if(!snap.val()){
