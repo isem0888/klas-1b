@@ -166,16 +166,45 @@ const broadcastTg = (text) => {
       method:'POST', headers:{'Content-Type':'application/json'},
       body: JSON.stringify({chat_id: String(chatId), text, parse_mode:'HTML'})
     }).catch(()=>{});
-    // Завжди надсилаємо адміну
-    window._db.ref("klas1b/tgChat").once('value', cs => {
-      const adminChat = cs.val();
-      if (adminChat) send(adminChat);
-    }).catch(()=>{});
-    // Розсилаємо всім батькам з tgId
-    window._db.ref(`${DB_ROOT}/parents`).once('value', snap2 => {
-      const all = snap2.val() ? Object.values(snap2.val()) : [];
-      all.filter(p => p && p.tgId).forEach(p => send(p.tgId));
-    }).catch(()=>{});
+
+    const doSend = (usernameMap) => {
+      // Завжди надсилаємо адміну
+      window._db.ref("klas1b/tgChat").once('value', cs => {
+        const adminChat = cs.val();
+        if (adminChat) send(adminChat);
+      }).catch(()=>{});
+      // Розсилаємо батькам з tgId, або знайденим через usernameMap
+      window._db.ref(`${DB_ROOT}/parents`).once('value', snap2 => {
+        const all = snap2.val() ? Object.values(snap2.val()) : [];
+        all.filter(p => p).forEach(p => {
+          if (p.tgId) {
+            send(p.tgId);
+          } else if (p.tgUsername && usernameMap) {
+            const chatId = usernameMap[(p.tgUsername||"").toLowerCase()];
+            if (chatId) {
+              send(chatId);
+              // Зберігаємо знайдений tgId в Firebase
+              window._db.ref(`${DB_ROOT}/parents/${p.id}/tgId`).set(chatId).catch(()=>{});
+            }
+          }
+        });
+      }).catch(()=>{});
+    };
+
+    // Спочатку отримуємо getUpdates щоб знайти chat_id за username
+    fetch(`https://api.telegram.org/bot${token}/getUpdates?limit=100&allowed_updates=%5B%22message%22%5D`)
+      .then(r => r.json())
+      .then(data => {
+        const map = {};
+        if (data.ok && data.result) {
+          data.result.forEach(upd => {
+            const from = upd.message?.from;
+            if (from?.username && from?.id) map[from.username.toLowerCase()] = from.id;
+          });
+        }
+        doSend(map);
+      })
+      .catch(() => doSend(null));
   }).catch(()=>{});
 };
 
