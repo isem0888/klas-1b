@@ -34,7 +34,7 @@ input,select,textarea{font-family:inherit}
 </head>
 <body>
 <div id="root"><div style="display:flex;align-items:center;justify-content:center;height:100vh;font-family:sans-serif;color:#6d28d9;font-size:14px;flex-direction:column;gap:8px"><div style="width:32px;height:32px;border:3px solid #6d28d9;border-top-color:transparent;border-radius:50%;animation:spin 0.8s linear infinite"></div><span>Завантаження...</span></div></div>
-<style>@keyframes spin{to{transform:rotate(360deg)}}</style>
+<style>@keyframes spin{to{transform:rotate(360deg)}}@keyframes pulse{0%,100%{box-shadow:0 0 0 0 rgba(124,58,237,.5)}70%{box-shadow:0 0 0 10px rgba(124,58,237,0)}}</style>
 <script>
 window.onerror=function(msg,src,line){
   if(!msg||msg==="Script error."||msg==="ResizeObserver loop limit exceeded") return false;
@@ -53,10 +53,11 @@ window.onerror=function(msg,src,line){
      ═══════════════════════════════════════════════════════════════════ -->
 <script>
 // 🔐 Токен та chat_id зберігаються у Firebase, а не у коді
-// Щоб встановити: Firebase Console → Realtime Database → klas1b/config
-// { "tgToken": "ВАШ_ТОКЕН", "tgChat": "ВАШ_CHAT_ID" }
 window.TG_BOT_TOKEN  = "";
 window.TG_ADMIN_CHAT = "";
+
+// 🔢 Версія додатку — збільшуйте при кожному оновленні
+window.APP_VER = 4;
 
 const FIREBASE_CONFIG = {
   apiKey:            "AIzaSyAvSweaMli_wYZF1fk8NKF7FNVXLH2KEq0",
@@ -565,6 +566,21 @@ function MainApp({lang,setLang,user,onChangeRole,onLogout}){
   const [fTeacher,setFTeacher]=useState({n:"",s:"",p:""});
   const [fSched,setFSched]=useState({d:"",l:["","","","",""]});
   const [photoModal,setPhotoModal]=useState(null);
+
+  // ── Перевірка оновлень ────────────────────────────────────────────────────
+  const [updateAvail,setUpdateAvail]=useState(false);
+  useEffect(()=>{
+    const check=()=>{
+      if(!window._db) return;
+      window._db.ref("klas1b/appVersion").once("value",snap=>{
+        const v=snap.val();
+        if(v && Number(v)>window.APP_VER) setUpdateAvail(true);
+      }).catch(()=>{});
+    };
+    check();
+    const t=setInterval(check,60000);
+    return()=>clearInterval(t);
+  },[]);
 
   const canPost=CAN_POST.includes(user.role);
   const canMgr=CAN_MANAGE.includes(user.role);
@@ -1336,6 +1352,20 @@ function MainApp({lang,setLang,user,onChangeRole,onLogout}){
       )}
 
       </main>
+
+      {/* ── БАНЕР ОНОВЛЕННЯ ─────────────────────────────────────────── */}
+      {updateAvail&&(
+        <div className="fixed bottom-4 left-0 right-0 flex justify-center z-50 px-4 pointer-events-none">
+          <button
+            onClick={()=>window.location.reload(true)}
+            className="pointer-events-auto flex items-center gap-3 px-5 py-3 rounded-2xl shadow-2xl text-white font-bold text-sm"
+            style={{background:"linear-gradient(135deg,#7c3aed,#2563eb)",animation:"pulse 2s infinite"}}
+          >
+            <span style={{fontSize:"20px"}}>🔄</span>
+            <span>{ua?"Доступне оновлення — натисніть щоб оновити":"Доступно обновление — нажмите для обновления"}</span>
+          </button>
+        </div>
+      )}
     </div>
   );
 }
