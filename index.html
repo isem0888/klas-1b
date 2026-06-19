@@ -662,7 +662,7 @@ function MainApp({lang,setLang,user,onChangeRole,onLogout}){
   const [editSchedIdx,setEditSchedIdx]=useState(null);
 
   // forms
-  const [fAnn,setFAnn]=useState({title:"",text:""});
+  const [fAnn,setFAnn]=useState({title:"",text:"",callToHelp:false});
   const [fEv,setFEv]=useState({title:"",date:"",time:"",type:"meeting"});
   const [fExp,setFExp]=useState({desc:"",amount:"",receipt:""});
   const [fCol,setFCol]=useState({name:"",amount:""});
@@ -757,12 +757,13 @@ function MainApp({lang,setLang,user,onChangeRole,onLogout}){
 
   const addAnn=()=>{
     if(!fAnn.title.trim()||!fAnn.text.trim())return;
-    setAnn(p=>[{id:Date.now(),title:fAnn.title,titleRu:fAnn.title,text:fAnn.text,textRu:fAnn.text,date:today(),author:user.name,pinned:false},...p]);
+    setAnn(p=>[{id:Date.now(),title:fAnn.title,titleRu:fAnn.title,text:fAnn.text,textRu:fAnn.text,date:today(),author:user.name,pinned:false,callToHelp:fAnn.callToHelp||false,helpers:[]},...p]);
     // Браузерний push
     pushNotif(fAnn.title, fAnn.text.slice(0,120));
     // Telegram розсилка всім батькам
-    broadcastTg(`📢 <b>${fAnn.title}</b>\n\n${fAnn.text.slice(0,300)}${fAnn.text.length>300?"…":""}\n\n<i>— ${user.name} • Батьківський комітет 1Б</i>`);
-    setFAnn({title:"",text:""});setModal(null);
+    const helpTag=fAnn.callToHelp?`\n\n🤝 <b>${ua?"Потрібна ваша допомога! Відгукніться в застосунку.":"Нужна ваша помощь! Откликнитесь в приложении."}  </b>`:"";
+    broadcastTg(`📢 <b>${fAnn.title}</b>\n\n${fAnn.text.slice(0,300)}${fAnn.text.length>300?"…":""}${helpTag}\n\n<i>— ${user.name} • Батьківський комітет 1Б</i>`);
+    setFAnn({title:"",text:"",callToHelp:false});setModal(null);
   };
   const addEv=()=>{if(!fEv.title.trim()||!fEv.date)return;setEvents(p=>[...p,{id:Date.now(),title:fEv.title,titleRu:fEv.title,date:fEv.date,time:fEv.time,type:fEv.type,vol:[]}].sort((a,b)=>a.date.localeCompare(b.date)));broadcastTg(`📅 <b>Нова подія — 1Б клас</b>\n\n📌 <b>${fEv.title}</b>\n🗓 Дата: ${fEv.date}${fEv.time?"\n⏰ Час: "+fEv.time:""}\n\nПодробиці в застосунку @klas1b_bot`);setFEv({title:"",date:"",time:"",type:"meeting"});setModal(null);};
   const addExp=()=>{if(!fExp.desc.trim()||!fExp.amount)return;setExps(p=>[...p,{id:Date.now(),desc:fExp.desc,descRu:fExp.desc,amount:+fExp.amount,date:today(),receipt:fExp.receipt||""}]);setFExp({desc:"",amount:"",receipt:""});setModal(null);};
@@ -814,9 +815,7 @@ function MainApp({lang,setLang,user,onChangeRole,onLogout}){
     setNeeds(p=>p.map(n=>{
       if(n.id!==id) return n;
       const h=toArr(n.helpers);
-      if(h.includes(user.name)) return n; // вже допомагав
-      // Збільшуємо лічильник у Firebase
-      if(window._db&&user.id) window._db.ref(`klas1b/helpCounts/${user.id}`).transaction(v=>(v||0)+1).catch(()=>{});
+      if(h.includes(user.name)) return n;
       return {...n,helpers:[...h,user.name]};
     }));
   };
@@ -940,6 +939,7 @@ function MainApp({lang,setLang,user,onChangeRole,onLogout}){
                   {a.media&&a.mediaType==="image"&&<img src={a.media} alt="" className="w-full rounded-xl mt-2 object-cover max-h-60"/>}
                   {a.media&&a.mediaType==="video"&&<video src={a.media} controls className="w-full rounded-xl mt-2 max-h-60" style={{maxHeight:"240px"}}/>}
                   {(ua?a.text:a.textRu)&&<p className="text-slate-600 text-sm mt-1.5 leading-relaxed">{ua?a.text:a.textRu}</p>}
+                  {a.callToHelp&&(()=>{const ah=toArr(a.helpers);const iH=ah.includes(user.name);return(<div className="mt-3 pt-2.5 border-t border-rose-100 flex items-center justify-between gap-2"><span className="text-xs text-rose-500 font-semibold">🤝 {ah.length} {ua?"відгукнулись":"откликнулись"}</span>{iH?<span className="text-xs font-bold text-rose-400 bg-rose-50 px-3 py-1.5 rounded-xl">✓ {ua?"Я відгукнувся":"Я откликнулся"}</span>:<button onClick={()=>{setAnn(p=>p.map(x=>x.id!==a.id?x:{...x,helpers:[...ah,user.name]}));if(window._db&&user.id)window._db.ref(`klas1b/helpCounts/${user.id}`).transaction(v=>(v||0)+1).catch(()=>{});}} className="text-xs font-bold px-3 py-1.5 rounded-xl bg-rose-500 text-white hover:bg-rose-600 transition-colors">{ua?"🙋 Відгукнутись":"🙋 Откликнуться"}</button>}</div>);})()}
                   <div className="flex justify-between mt-3 pt-2.5 border-t border-slate-50 text-xs text-slate-400"><span>{a.author}</span><span>{a.date}</span></div>
                 </div>
               </div>
@@ -949,6 +949,10 @@ function MainApp({lang,setLang,user,onChangeRole,onLogout}){
             <div className="space-y-3">
               <Fld label={t.ann.fTitle}><input className={INP} value={fAnn.title} onChange={e=>setFAnn(f=>({...f,title:e.target.value}))}/></Fld>
               <Fld label={t.ann.fText}><textarea className={INP} rows={4} value={fAnn.text} onChange={e=>setFAnn(f=>({...f,text:e.target.value}))}/></Fld>
+              <label className={`flex items-center gap-3 p-3 rounded-xl cursor-pointer transition-colors ${fAnn.callToHelp?"bg-rose-50 border border-rose-200":"bg-slate-50 border border-slate-200"}`}>
+                <input type="checkbox" checked={fAnn.callToHelp} onChange={e=>setFAnn(f=>({...f,callToHelp:e.target.checked}))} className="w-4 h-4 accent-rose-500"/>
+                <div><p className="text-sm font-bold text-slate-700">🤝 {ua?"Заклик до допомоги":"Призыв к помощи"}</p><p className="text-xs text-slate-500">{ua?"Батьки зможуть відгукнутися і отримають + у рейтинг":"Родители смогут откликнуться и получат + в рейтинг"}</p></div>
+              </label>
               <div className="flex gap-2 pt-1"><Btn cls="flex-1 text-center" onClick={addAnn}>{t.ann.pub}</Btn><Btn v="sec" onClick={()=>setModal(null)}>{t.common.cancel}</Btn></div>
             </div>
           </Modal>
@@ -1315,7 +1319,6 @@ function MainApp({lang,setLang,user,onChangeRole,onLogout}){
             <h2 className="font-black text-slate-800 text-lg">{t.needs.title}</h2>
             {canPost?<Btn onClick={()=>setModal("need")}>{t.needs.add}</Btn>:<span className="text-xs text-amber-600 bg-amber-50 px-3 py-1.5 rounded-xl font-medium">🔒</span>}
           </div>
-          {(()=>{const leaders=parents.filter(p=>helpCounts[p.id]>0).sort((a,b)=>(helpCounts[b.id]||0)-(helpCounts[a.id]||0)).slice(0,5);return leaders.length>0&&<div className="mb-4 p-3 rounded-2xl bg-gradient-to-r from-violet-50 to-purple-50 border border-violet-100"><p className="text-xs font-black text-violet-700 mb-2">🏆 {ua?"Топ помічників":"Топ помощников"}</p><div className="space-y-1">{leaders.map((p,i)=><div key={p.id} className="flex items-center gap-2"><span className="text-sm">{["🥇","🥈","🥉","4️⃣","5️⃣"][i]}</span><span className="text-xs font-semibold text-slate-700 flex-1">{ua?p.name:p.nameRu}</span><span className="text-xs font-black text-violet-600 bg-violet-100 px-2 py-0.5 rounded-full">🤝 {helpCounts[p.id]}</span></div>)}</div></div>;})()}
           {needs.length===0&&<Empty text={t.needs.noItems}/>}
           <div className="space-y-3">
             {needs.map(n=>{
