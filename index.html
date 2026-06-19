@@ -140,11 +140,18 @@ function useFBState(path, init=[]) {
 
 // ── TELEGRAM NOTIFICATION ─────────────────────────────────────────────────────
 const sendTgMsg = (text) => {
-  const token = window.TG_BOT_TOKEN; const chat = window.TG_ADMIN_CHAT;
-  if (!token || token.startsWith("YOUR_") || !chat || chat.startsWith("YOUR_")) return;
-  fetch(`https://api.telegram.org/bot${token}/sendMessage`, {
-    method:'POST', headers:{'Content-Type':'application/json'},
-    body: JSON.stringify({chat_id: chat, text, parse_mode:'HTML'})
+  if (!window._db) return;
+  window._db.ref("klas1b/tgToken").once('value', tSnap => {
+    const token = tSnap.val();
+    if (!token) return;
+    window._db.ref("klas1b/tgChat").once('value', cSnap => {
+      const chat = cSnap.val();
+      if (!chat) return;
+      fetch(`https://api.telegram.org/bot${token}/sendMessage`, {
+        method:'POST', headers:{'Content-Type':'application/json'},
+        body: JSON.stringify({chat_id: String(chat), text, parse_mode:'HTML'})
+      }).catch(()=>{});
+    }).catch(()=>{});
   }).catch(()=>{});
 };
 
@@ -152,20 +159,19 @@ const sendTgMsg = (text) => {
 // Надсилає повідомлення ВСІМ батькам у Telegram (у кого є tgId в базі)
 const broadcastTg = (text) => {
   if (!window._db) return;
-  // Читаємо токен свіжо з Firebase (уникаємо проблему кешу)
-  window._db.ref("klas1b").once('value', snap => {
-    const cfg = snap.val();
-    const token = cfg && cfg.tgToken;
+  // Читаємо тільки токен (не весь klas1b — там можуть бути великі фото)
+  window._db.ref("klas1b/tgToken").once('value', snap => {
+    const token = snap.val();
     if (!token) return;
     window._db.ref(`${DB_ROOT}/parents`).once('value', snap2 => {
       const all = snap2.val() ? Object.values(snap2.val()) : [];
-      all.forEach(p => {
-        if (p.tgId) {
-          fetch(`https://api.telegram.org/bot${token}/sendMessage`, {
-            method:'POST', headers:{'Content-Type':'application/json'},
-            body: JSON.stringify({chat_id: p.tgId, text, parse_mode:'HTML'})
-          }).catch(()=>{});
-        }
+      const withId = all.filter(p => p && p.tgId);
+      console.log(`[broadcastTg] розсилка ${withId.length} батькам`);
+      withId.forEach(p => {
+        fetch(`https://api.telegram.org/bot${token}/sendMessage`, {
+          method:'POST', headers:{'Content-Type':'application/json'},
+          body: JSON.stringify({chat_id: String(p.tgId), text, parse_mode:'HTML'})
+        }).catch(e=>console.warn('[broadcastTg] помилка:', e));
       });
     }).catch(()=>{});
   }).catch(()=>{});
