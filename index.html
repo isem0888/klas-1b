@@ -151,18 +151,23 @@ const sendTgMsg = (text) => {
 // ── BROADCAST TG TO ALL PARENTS ──────────────────────────────────────────────
 // Надсилає повідомлення ВСІМ батькам у Telegram (у кого є tgId в базі)
 const broadcastTg = (text) => {
-  const token = window.TG_BOT_TOKEN;
-  if (!token || !window._db) return;
-  window._db.ref(`${DB_ROOT}/parents`).once('value', snap => {
-    const all = snap.val() ? Object.values(snap.val()) : [];
-    all.forEach(p => {
-      if (p.tgId) {
-        fetch(`https://api.telegram.org/bot${token}/sendMessage`, {
-          method:'POST', headers:{'Content-Type':'application/json'},
-          body: JSON.stringify({chat_id: p.tgId, text, parse_mode:'HTML'})
-        }).catch(()=>{});
-      }
-    });
+  if (!window._db) return;
+  // Читаємо токен свіжо з Firebase (уникаємо проблему кешу)
+  window._db.ref("klas1b").once('value', snap => {
+    const cfg = snap.val();
+    const token = cfg && cfg.tgToken;
+    if (!token) return;
+    window._db.ref(`${DB_ROOT}/parents`).once('value', snap2 => {
+      const all = snap2.val() ? Object.values(snap2.val()) : [];
+      all.forEach(p => {
+        if (p.tgId) {
+          fetch(`https://api.telegram.org/bot${token}/sendMessage`, {
+            method:'POST', headers:{'Content-Type':'application/json'},
+            body: JSON.stringify({chat_id: p.tgId, text, parse_mode:'HTML'})
+          }).catch(()=>{});
+        }
+      });
+    }).catch(()=>{});
   }).catch(()=>{});
 };
 
