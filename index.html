@@ -328,6 +328,12 @@ function Av({name,photo,sz="md"}){
 }
 function SL({children}){return <p className="text-xs font-bold text-slate-400 uppercase tracking-widest mb-2 mt-5 first:mt-0">{children}</p>}
 function Empty({text}){return <div className="text-center py-14 text-slate-400"><div className="text-4xl mb-3">🫙</div><p className="text-sm">{text}</p></div>}
+function PhoneNum({phone}){
+  const [copied,setCopied]=useState(false);
+  if(!phone) return null;
+  const copy=e=>{e.stopPropagation();navigator.clipboard?.writeText(phone).then(()=>{setCopied(true);setTimeout(()=>setCopied(false),1500);}).catch(()=>{});};
+  return <button type="button" onClick={copy} className="inline-flex items-center gap-1 text-xs text-slate-500 hover:text-violet-600 transition-colors">{copied?<span className="text-green-600 font-semibold">✓ скопійовано</span>:<><span>📋</span><span>{phone}</span></>}</button>;
+}
 
 // ── REGISTRATION ──────────────────────────────────────────────────────────────
 function RegScreen({lang,setLang,onReg}){
@@ -335,7 +341,7 @@ function RegScreen({lang,setLang,onReg}){
   // Автоматично беремо TG username та id із WebApp
   const tgAutoUser=window.Telegram?.WebApp?.initDataUnsafe?.user?.username||"";
   const tgAutoId=window.Telegram?.WebApp?.initDataUnsafe?.user?.id||null;
-  const [form,setForm]=useState({name:"",phone:"+380",child:"",childBirthday:"",role:"parent",pass:"",photo:"",tgUsername:tgAutoUser});
+  const [form,setForm]=useState({name:"",phone:"+380",phone2:"",child:"",childBirthday:"",role:"parent",pass:"",photo:"",tgUsername:tgAutoUser});
   const [c1,setC1]=useState(false);const[c2,setC2]=useState(false);
   const [err,setErr]=useState("");const[errNoTg,setErrNoTg]=useState(false);const[showTgHint,setShowTgHint]=useState(false);const[cm,setCm]=useState(null);
   const photoRef=useRef(null);
@@ -356,54 +362,60 @@ function RegScreen({lang,setLang,onReg}){
     if(needPass&&form.pass!==ROLE_PASSWORDS[form.role]){setErr(r.wrongPass);return;}
     const roleNames={parent:"Батько/Мати",teacher:"Вчитель",admin:"Адміністратор",chairman:"Голова комітету"};
     const tgU=form.tgUsername.replace(/^@/,"").trim();
-    const doReg=(finalId, isNew)=>{
-      const u={id:finalId,name:form.name,phone:form.phone,child:form.child,childRu:form.child,
-               childBirthday:form.childBirthday,role:form.role,photo:form.photo,tgUsername:tgU,tgId:tgAutoId};
+    const phone2clean=form.phone2&&form.phone2.trim()!=="+380"?form.phone2.trim():"";
+    const sendRegNotif=(name,child,birthday,phone,role)=>{
+      const msg=`🆕 <b>Нова реєстрація — 1Б клас</b>\n\n👤 <b>${name}</b>\n👦 Дитина: ${child}${birthday?"\n🎂 Д/н: "+birthday:""}\n📞 Тел: ${phone||"—"}\n🏷 Роль: ${roleNames[role]}\n🕐 ${new Date().toLocaleString("uk-UA")}`;
+      if(window._db){
+        window._db.ref("klas1b").once("value",snap=>{
+          const cfg=snap.val();
+          if(cfg&&cfg.tgToken&&cfg.tgChat){
+            fetch(`https://api.telegram.org/bot${cfg.tgToken}/sendMessage`,{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({chat_id:String(cfg.tgChat),text:msg,parse_mode:"HTML"})}).catch(()=>{});
+          }
+        }).catch(()=>{});
+      } else sendTgMsg(msg);
+    };
+    const doReg=(finalId, existing)=>{
+      const u={id:finalId,name:existing?existing.name:form.name,phone:existing?existing.phone:form.phone,child:existing?existing.child:form.child,childRu:existing?existing.child:form.child,childBirthday:form.childBirthday,role:existing?existing.role:form.role,photo:form.photo||existing?.photo||"",tgUsername:tgU,tgId:tgAutoId};
       localStorage.setItem("rc_user",JSON.stringify(u));
       if(window._db){
-        window._db.ref(`${DB_ROOT}/parents/${finalId}`).set({
-          id:finalId, name:form.name, nameRu:form.name,
-          child:form.child, childRu:form.child,
-          childBirthday:form.childBirthday,
-          phone:form.phone, role:form.role, photo:form.photo||"",
-          tgUsername:tgU, tgId:tgAutoId||null, comment:"",
-          ...(isNew?{registeredAt:Date.now()}:{})
-        }).catch(()=>{});
-      }
-      if(isNew){
-        const msg=`🆕 <b>Нова реєстрація — 1Б клас</b>\n\n👤 <b>${form.name}</b>\n👦 Дитина: ${form.child}${form.childBirthday?"\n🎂 Д/н: "+form.childBirthday:""}\n📞 Тел: ${form.phone||"—"}\n🏷 Роль: ${roleNames[form.role]}\n🕐 ${new Date().toLocaleString("uk-UA")}`;
-        // Читаємо токен напряму з Firebase (уникаємо проблеми з несинхронізованим кешем)
-        if(window._db){
-          window._db.ref("klas1b").once("value", snap=>{
-            const cfg=snap.val();
-            if(cfg && cfg.tgToken && cfg.tgChat){
-              fetch(`https://api.telegram.org/bot${cfg.tgToken}/sendMessage`,{
-                method:"POST",headers:{"Content-Type":"application/json"},
-                body:JSON.stringify({chat_id:String(cfg.tgChat),text:msg,parse_mode:"HTML"})
-              }).catch(()=>{});
-            }
-          }).catch(()=>{});
+        if(existing){
+          // Оновлюємо існуючий запис — лише змінені поля
+          const upd={tgUsername:tgU,tgId:tgAutoId||null,registeredAt:Date.now()};
+          if(phone2clean) upd.phone2=phone2clean;
+          if(form.photo) upd.photo=form.photo;
+          window._db.ref(`${DB_ROOT}/parents/${finalId}`).update(upd).catch(()=>{});
+          // Повідомляємо тільки якщо перша реєстрація (ще не було tgUsername)
+          if(!existing.tgUsername) sendRegNotif(existing.name,existing.child,form.childBirthday,existing.phone,existing.role);
         } else {
-          sendTgMsg(msg); // fallback
+          // Новий запис
+          window._db.ref(`${DB_ROOT}/parents/${finalId}`).set({
+            id:finalId,name:form.name,nameRu:form.name,child:form.child,childRu:form.child,
+            childBirthday:form.childBirthday,phone:form.phone,phone2:phone2clean,
+            role:form.role,photo:form.photo||"",tgUsername:tgU,tgId:tgAutoId||null,
+            comment:"",registeredAt:Date.now()
+          }).catch(()=>{});
+          sendRegNotif(form.name,form.child,form.childBirthday,form.phone,form.role);
         }
       }
       requestNotifPerm();
       onReg(u);
     };
-    // Перевіряємо чи вже є в базі (по телефону або імені) — щоб не дублювати
-    if(window._db && form.phone){
-      window._db.ref(`${DB_ROOT}/parents`).once('value', snap=>{
-        const all = snap.val() ? Object.values(snap.val()) : [];
-        const phone=form.phone.replace(/\D/g,"");
-        const existing=all.find(p=>p.phone&&p.phone.replace(/\D/g,"")===phone);
-        if(existing){
-          doReg(existing.id, false); // оновлюємо існуючий запис
-        } else {
-          doReg(Date.now(), true); // новий запис + TG
-        }
-      }).catch(()=>doReg(Date.now(), true));
+    // Шукаємо по phone1 або phone2 — щоб не дублювати
+    if(window._db){
+      window._db.ref(`${DB_ROOT}/parents`).once('value',snap=>{
+        const all=snap.val()?Object.values(snap.val()):[];
+        const normalize=s=>s?s.replace(/\D/g,""):"";
+        const ph1=normalize(form.phone);
+        const ph2=normalize(phone2clean);
+        const existing=all.find(p=>{
+          const ep=normalize(p.phone); const ep2=normalize(p.phone2||"");
+          return (ph1&&(ep===ph1||ep2===ph1))||(ph2&&(ep===ph2||ep2===ph2));
+        });
+        if(existing) doReg(existing.id,existing);
+        else doReg(Date.now(),null);
+      }).catch(()=>doReg(Date.now(),null));
     } else {
-      doReg(Date.now(), true);
+      doReg(Date.now(),null);
     }
   };
   return(
@@ -433,6 +445,7 @@ function RegScreen({lang,setLang,onReg}){
           </Fld>
           <Fld label={r.name}><input className={INP} placeholder={r.name} value={form.name} onChange={e=>set("name",e.target.value)}/></Fld>
           <Fld label={r.phone}><input className={INP} placeholder="+380 00 000 00 00" value={form.phone} onChange={e=>{const v=e.target.value;set("phone",v.startsWith("+380")?v:"+380");}}/></Fld>
+          <Fld label={lang==="ua"?"Додатковий телефон (необов'язково)":"Дополнительный телефон (необязательно)"}><input className={INP} placeholder="+380 00 000 00 00" value={form.phone2} onChange={e=>set("phone2",e.target.value)}/></Fld>
           <Fld label={r.child}><input className={INP} placeholder={r.child} value={form.child} onChange={e=>set("child",e.target.value)}/></Fld>
           <Fld label={r.childBday}><input className={INP} type="date" value={form.childBirthday} onChange={e=>set("childBirthday",e.target.value)}/></Fld>
           <Fld label={lang==="ua"?"Telegram юзернейм *":"Telegram username *"}>
@@ -988,9 +1001,9 @@ function MainApp({lang,setLang,user,onChangeRole,onLogout}){
         <div>
           <div className="flex justify-between items-center mb-3"><h2 className="font-black text-slate-800 text-lg">{t.par.title} ({parents.length})</h2><Btn onClick={()=>setModal("par")}>{t.par.add}</Btn></div>
           <input className={`${INP} mb-3`} placeholder={t.par.search} value={psearch} onChange={e=>setPsearch(e.target.value)}/>
-          {filtPar.filter(p=>p.role!=="parent").length>0&&<><SL>{t.par.comm}</SL><div className="space-y-4 mb-4">{filtPar.filter(p=>p.role!=="parent").map((p,i)=>{const isOwn=p.id===user.id||p.name===user.name;const roleColor={teacher:"from-amber-500 to-orange-500",admin:"from-rose-500 to-pink-600",chairman:"from-violet-600 to-indigo-600"}[p.role]||"from-violet-600 to-indigo-600";return(<div key={p.id} className="rounded-2xl overflow-hidden shadow-md" style={{background:"#fff",border:"1px solid #ede9fe"}}><div className={`h-1.5 bg-gradient-to-r ${roleColor}`}/><div className="p-4 flex items-center gap-4"><span className="text-sm font-black text-slate-400 w-6 flex-shrink-0 text-center">{i+1}</span><Av name={ua?p.name:p.nameRu} photo={p.photo} sz="lg"/><div className="flex-1 min-w-0"><p className="font-bold text-slate-900 text-base leading-snug">{ua?p.name:p.nameRu}{isNewReg(p)&&<span className="ml-2 text-xs font-bold bg-green-100 text-green-600 px-1.5 py-0.5 rounded-full align-middle">new</span>}</p><p className="text-xs text-slate-500 mt-0.5">{p.phone}</p>{p.tgUsername&&<a href={`https://t.me/${p.tgUsername}`} target="_blank" onClick={e=>{e.stopPropagation();if(window.Telegram?.WebApp?.openTelegramLink){e.preventDefault();window.Telegram.WebApp.openTelegramLink(`https://t.me/${p.tgUsername}`);}}} className="inline-flex items-center gap-1 mt-1 text-xs font-semibold text-blue-500 hover:text-blue-700">✈️ @{p.tgUsername}</a>}{p.comment&&<p className="text-xs text-slate-400 mt-1 italic">"{p.comment}"</p>}</div><div className="flex flex-col items-end gap-2"><span className={`text-xs font-bold px-3 py-1 rounded-full text-white bg-gradient-to-r ${roleColor}`}>{t.roles[p.role]}</span><div className="flex gap-1">{(canPost||isOwn)&&<button onClick={()=>{setEditPar({...p,comment:p.comment||""});setModal("editPar");}} className="w-7 h-7 flex items-center justify-center rounded-lg bg-slate-100 hover:bg-blue-100 text-slate-400 hover:text-blue-500 text-sm transition-colors">✏️</button>}{canPost&&<button onClick={()=>setParents(x=>x.filter(q=>q.id!==p.id))} className="w-7 h-7 flex items-center justify-center rounded-lg bg-slate-100 hover:bg-red-100 text-slate-400 hover:text-red-500 text-sm transition-colors">✕</button>}</div></div></div></div>);})}</div></>}
+          {filtPar.filter(p=>p.role!=="parent").length>0&&<><SL>{t.par.comm}</SL><div className="space-y-4 mb-4">{filtPar.filter(p=>p.role!=="parent").map((p,i)=>{const isOwn=p.id===user.id||p.name===user.name;const roleColor={teacher:"from-amber-500 to-orange-500",admin:"from-rose-500 to-pink-600",chairman:"from-violet-600 to-indigo-600"}[p.role]||"from-violet-600 to-indigo-600";return(<div key={p.id} className="rounded-2xl overflow-hidden shadow-md" style={{background:"#fff",border:"1px solid #ede9fe"}}><div className={`h-1.5 bg-gradient-to-r ${roleColor}`}/><div className="p-4 flex items-center gap-4"><span className="text-sm font-black text-slate-400 w-6 flex-shrink-0 text-center">{i+1}</span><Av name={ua?p.name:p.nameRu} photo={p.photo} sz="lg"/><div className="flex-1 min-w-0"><p className="font-bold text-slate-900 text-base leading-snug">{ua?p.name:p.nameRu}{isNewReg(p)&&<span className="ml-2 text-xs font-bold bg-green-100 text-green-600 px-1.5 py-0.5 rounded-full align-middle">new</span>}</p><div className="flex flex-wrap gap-2 mt-0.5"><PhoneNum phone={p.phone}/>{p.phone2&&<PhoneNum phone={p.phone2}/>}</div>{p.tgUsername&&<a href={`https://t.me/${p.tgUsername}`} target="_blank" onClick={e=>{e.stopPropagation();if(window.Telegram?.WebApp?.openTelegramLink){e.preventDefault();window.Telegram.WebApp.openTelegramLink(`https://t.me/${p.tgUsername}`);}}} className="inline-flex items-center gap-1 mt-1 text-xs font-semibold text-blue-500 hover:text-blue-700">✈️ @{p.tgUsername}</a>}{p.comment&&<p className="text-xs text-slate-400 mt-1 italic">"{p.comment}"</p>}</div><div className="flex flex-col items-end gap-2"><span className={`text-xs font-bold px-3 py-1 rounded-full text-white bg-gradient-to-r ${roleColor}`}>{t.roles[p.role]}</span><div className="flex gap-1">{(canPost||isOwn)&&<button onClick={()=>{setEditPar({...p,comment:p.comment||""});setModal("editPar");}} className="w-7 h-7 flex items-center justify-center rounded-lg bg-slate-100 hover:bg-blue-100 text-slate-400 hover:text-blue-500 text-sm transition-colors">✏️</button>}{canPost&&<button onClick={()=>setParents(x=>x.filter(q=>q.id!==p.id))} className="w-7 h-7 flex items-center justify-center rounded-lg bg-slate-100 hover:bg-red-100 text-slate-400 hover:text-red-500 text-sm transition-colors">✕</button>}</div></div></div></div>);})}</div></>}
           <SL>{t.par.all}</SL>
-          <div className="space-y-2">{filtPar.filter(p=>p.role==="parent").map((p,i)=>{const isOwn=p.id===user.id||p.name===user.name;return(<div key={p.id} className="card"><div className="card-inner flex items-center gap-3 py-3"><span className="text-xs font-black text-slate-400 w-5 flex-shrink-0 text-center">{i+1}</span><Av name={ua?p.name:p.nameRu} photo={p.photo} sz="sm"/><div className="flex-1"><p className="font-semibold text-slate-800 text-sm">{ua?p.name:p.nameRu}{isNewReg(p)&&<span className="ml-2 text-xs font-bold bg-green-100 text-green-600 px-1.5 py-0.5 rounded-full align-middle">new</span>}</p><p className="text-xs text-slate-500">{ua?p.child:p.childRu} · {p.phone}</p>{p.tgUsername&&<a href={`https://t.me/${p.tgUsername}`} target="_blank" onClick={e=>{e.stopPropagation();if(window.Telegram?.WebApp?.openTelegramLink){e.preventDefault();window.Telegram.WebApp.openTelegramLink(`https://t.me/${p.tgUsername}`);}}} className="inline-flex items-center gap-1 mt-1 text-xs font-semibold text-blue-500 hover:text-blue-700 transition-colors">✈️ @{p.tgUsername}</a>}{p.comment&&<p className="text-xs text-slate-400 mt-0.5 italic">{p.comment}</p>}</div><div className="flex gap-1">{(canPost||isOwn)&&<button onClick={()=>{setEditPar({...p,comment:p.comment||""});setModal("editPar");}} className="w-7 h-7 flex items-center justify-center rounded-lg bg-slate-100 hover:bg-blue-100 text-slate-400 hover:text-blue-500 text-sm transition-colors">✏️</button>}{canPost&&<button onClick={()=>setParents(x=>x.filter(q=>q.id!==p.id))} className="w-7 h-7 flex items-center justify-center rounded-lg bg-slate-100 hover:bg-red-100 text-slate-400 hover:text-red-500 text-sm transition-colors">✕</button>}</div></div></div>);})}</div>
+          <div className="space-y-2">{filtPar.filter(p=>p.role==="parent").map((p,i)=>{const isOwn=p.id===user.id||p.name===user.name;return(<div key={p.id} className="card"><div className="card-inner flex items-center gap-3 py-3"><span className="text-xs font-black text-slate-400 w-5 flex-shrink-0 text-center">{i+1}</span><Av name={ua?p.name:p.nameRu} photo={p.photo} sz="sm"/><div className="flex-1"><p className="font-semibold text-slate-800 text-sm">{ua?p.name:p.nameRu}{isNewReg(p)&&<span className="ml-2 text-xs font-bold bg-green-100 text-green-600 px-1.5 py-0.5 rounded-full align-middle">new</span>}</p><p className="text-xs text-slate-500">{ua?p.child:p.childRu}</p><div className="flex flex-wrap gap-2 mt-0.5"><PhoneNum phone={p.phone}/>{p.phone2&&<PhoneNum phone={p.phone2}/>}</div>{p.tgUsername&&<a href={`https://t.me/${p.tgUsername}`} target="_blank" onClick={e=>{e.stopPropagation();if(window.Telegram?.WebApp?.openTelegramLink){e.preventDefault();window.Telegram.WebApp.openTelegramLink(`https://t.me/${p.tgUsername}`);}}} className="inline-flex items-center gap-1 mt-1 text-xs font-semibold text-blue-500 hover:text-blue-700 transition-colors">✈️ @{p.tgUsername}</a>}{p.comment&&<p className="text-xs text-slate-400 mt-0.5 italic">{p.comment}</p>}</div><div className="flex gap-1">{(canPost||isOwn)&&<button onClick={()=>{setEditPar({...p,comment:p.comment||""});setModal("editPar");}} className="w-7 h-7 flex items-center justify-center rounded-lg bg-slate-100 hover:bg-blue-100 text-slate-400 hover:text-blue-500 text-sm transition-colors">✏️</button>}{canPost&&<button onClick={()=>setParents(x=>x.filter(q=>q.id!==p.id))} className="w-7 h-7 flex items-center justify-center rounded-lg bg-slate-100 hover:bg-red-100 text-slate-400 hover:text-red-500 text-sm transition-colors">✕</button>}</div></div></div>);})}</div>
           <Modal show={modal==="par"} onClose={()=>setModal(null)} title={t.par.add}>
             <div className="space-y-3"><Fld label={t.par.pName}><input className={INP} value={fPar.name} onChange={e=>setFPar(f=>({...f,name:e.target.value}))}/></Fld><Fld label={t.par.cName}><input className={INP} value={fPar.child} onChange={e=>setFPar(f=>({...f,child:e.target.value}))}/></Fld><Fld label={t.par.phone}><input className={INP} value={fPar.phone} onChange={e=>setFPar(f=>({...f,phone:e.target.value}))}/></Fld><Fld label={t.par.role}><select className={INP} value={fPar.role} onChange={e=>setFPar(f=>({...f,role:e.target.value}))}>{Object.entries(t.roles).map(([k,v])=><option key={k} value={k}>{v}</option>)}</select></Fld><div className="flex gap-2 pt-1"><Btn cls="flex-1 text-center" onClick={addPar}>{t.common.add}</Btn><Btn v="sec" onClick={()=>setModal(null)}>{t.common.cancel}</Btn></div></div>
           </Modal>
@@ -1103,7 +1116,7 @@ function MainApp({lang,setLang,user,onChangeRole,onLogout}){
                   <div className="flex-1">
                     <p className="font-semibold text-slate-800 text-sm">{ua?tc.n:tc.nRu}</p>
                     <p className="text-xs text-violet-600 font-medium mt-0.5">{ua?tc.s:tc.sRu}</p>
-                    {tc.p&&<p className="text-xs text-slate-500 mt-0.5">{tc.p}</p>}
+                    {tc.p&&<div className="mt-0.5"><PhoneNum phone={tc.p}/></div>}
                   </div>
                   {canPost&&<div className="flex gap-1">
                     <button onClick={()=>{setEditTeacher({...tc});setModal("editTeacher");}} className="w-7 h-7 flex items-center justify-center rounded-lg bg-slate-100 hover:bg-blue-100 text-slate-400 hover:text-blue-500 text-sm transition-colors">✏️</button>
