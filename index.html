@@ -459,7 +459,7 @@ function RegScreen({lang,setLang,onReg}){
               <li>{lang==="ua"?"Додайте username та збережіть":"Добавьте username и сохраните"}</li>
               <li>{lang==="ua"?"Поверніться в бот і зареєструйтесь":"Вернитесь в бот и зарегистрируйтесь"}</li>
             </ol>
-            <button type="button" onClick={()=>{try{window.Telegram.WebApp.close();}catch(e){window.close();}}} className="mt-1 w-full py-2 rounded-lg bg-blue-500 text-white font-bold text-xs">{lang==="ua"?"Закрити додаток →":"Закрыть приложение →"}</button>
+            <p className="text-blue-600 font-medium">{lang==="ua"?"↘️ Натисніть стрілку вниз (поряд з ⋮) вгорі — щоб згорнути":"↘️ Нажмите стрелку вниз (рядом с ⋮) вверху — чтобы свернуть"}</p>
           </div>}
           <button
             onClick={submit}
