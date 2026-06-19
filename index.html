@@ -502,6 +502,7 @@ function App(){
     if(!window.confirm(lang==="ua"?"Вийти з акаунту?":"Выйти из аккаунта?")) return;
     localStorage.removeItem("rc_user");
     localStorage.removeItem("rc_seen");
+    localStorage.removeItem("rc_voted");
     setUser(null);
   };
   if(!user)return<RegScreen lang={lang} setLang={setLang} onReg={u=>setUser(u)}/>;
