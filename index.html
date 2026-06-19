@@ -324,7 +324,7 @@ function RegScreen({lang,setLang,onReg}){
   // Автоматично беремо TG username та id із WebApp
   const tgAutoUser=window.Telegram?.WebApp?.initDataUnsafe?.user?.username||"";
   const tgAutoId=window.Telegram?.WebApp?.initDataUnsafe?.user?.id||null;
-  const [form,setForm]=useState({name:"",phone:"",child:"",childBirthday:"",role:"parent",pass:"",photo:"",tgUsername:tgAutoUser});
+  const [form,setForm]=useState({name:"",phone:"+380",child:"",childBirthday:"",role:"parent",pass:"",photo:"",tgUsername:tgAutoUser});
   const [c1,setC1]=useState(false);const[c2,setC2]=useState(false);
   const [err,setErr]=useState("");const[cm,setCm]=useState(null);
   const photoRef=useRef(null);
@@ -419,7 +419,7 @@ function RegScreen({lang,setLang,onReg}){
             </div>
           </Fld>
           <Fld label={r.name}><input className={INP} placeholder={r.name} value={form.name} onChange={e=>set("name",e.target.value)}/></Fld>
-          <Fld label={r.phone}><input className={INP} placeholder="+380 00 000 00 00" value={form.phone} onChange={e=>set("phone",e.target.value)}/></Fld>
+          <Fld label={r.phone}><input className={INP} placeholder="+380 00 000 00 00" value={form.phone} onChange={e=>{const v=e.target.value;set("phone",v.startsWith("+380")?v:"+380");}}/></Fld>
           <Fld label={r.child}><input className={INP} placeholder={r.child} value={form.child} onChange={e=>set("child",e.target.value)}/></Fld>
           <Fld label={r.childBday}><input className={INP} type="date" value={form.childBirthday} onChange={e=>set("childBirthday",e.target.value)}/></Fld>
           <Fld label={lang==="ua"?"Telegram юзернейм *":"Telegram username *"}>
