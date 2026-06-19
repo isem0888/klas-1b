@@ -57,7 +57,7 @@ window.TG_BOT_TOKEN  = "";
 window.TG_ADMIN_CHAT = "";
 
 // 🔢 Версія додатку — збільшуйте при кожному оновленні
-window.APP_VER = 4;
+window.APP_VER = 99;
 
 const FIREBASE_CONFIG = {
   apiKey:            "AIzaSyAvSweaMli_wYZF1fk8NKF7FNVXLH2KEq0",
@@ -1582,7 +1582,7 @@ function MainApp({lang,setLang,user,onChangeRole,onLogout}){
       {updateAvail&&(
         <div className="fixed bottom-4 left-0 right-0 flex justify-center z-50 px-4 pointer-events-none">
           <button
-            onClick={()=>window.location.reload(true)}
+            onClick={()=>{setUpdateAvail(false);window.location.reload(true);}}
             className="pointer-events-auto flex items-center gap-3 px-5 py-3 rounded-2xl shadow-2xl text-white font-bold text-sm"
             style={{background:"linear-gradient(135deg,#7c3aed,#2563eb)",animation:"pulse 2s infinite"}}
           >
