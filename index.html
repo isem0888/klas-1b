@@ -1299,7 +1299,10 @@ function MainApp({lang,setLang,user,onChangeRole,onLogout}){
                 <span className="mx-2">·</span>
                 <span>{photoModal.date}</span>
               </div>
-              <button className="mt-4 text-white/60 hover:text-white text-sm" onClick={()=>setPhotoModal(null)}>{t.common.close} ✕</button>
+              <div className="flex gap-3 mt-4" onClick={e=>e.stopPropagation()}>
+                <button className="text-white/60 hover:text-white text-sm px-4 py-2 rounded-xl border border-white/20 hover:border-white/50 transition-colors" onClick={()=>setPhotoModal(null)}>{t.common.close} ✕</button>
+                <button className="text-white text-sm px-4 py-2 rounded-xl bg-red-500/80 hover:bg-red-500 transition-colors font-bold" onClick={()=>{setPhotos(p=>p.filter(x=>x.id!==photoModal.id));setPhotoModal(null);}}>🗑 {ua?"Видалити":"Удалить"}</button>
+              </div>
             </div>
           )}
         </div>
