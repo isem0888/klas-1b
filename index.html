@@ -820,7 +820,7 @@ function MainApp({lang,setLang,user,onChangeRole,onLogout}){
       return {...n,helpers:[...h,user.name]};
     }));
   };
-  const helpReq=id=>setHelpReqs(p=>p.map(h=>h.id!==id?h:{...h,helpers:h.helpers+1}));
+  const helpReq=id=>{setHelpReqs(p=>p.map(h=>{if(h.id!==id)return h;const hh=toArr(h.helpers);if(hh.includes(user.name))return h;if(window._db&&user.id)window._db.ref(`klas1b/helpCounts/${user.id}`).transaction(v=>(v||0)+1).catch(()=>{});return{...h,helpers:[...hh,user.name]};}));  };
 
   const handlePhoto=e=>{
     const files=e.target.files;if(!files||!files.length)return;
@@ -1395,10 +1395,7 @@ function MainApp({lang,setLang,user,onChangeRole,onLogout}){
                   </div>
                   <p className="text-slate-600 text-sm leading-relaxed">{ua?h.desc:h.descRu}</p>
                   {h.contact&&<p className="text-xs text-slate-400 mt-1.5">📞 {h.contact}</p>}
-                  <div className="mt-3 pt-3 border-t border-slate-50 flex items-center justify-between">
-                    <span className="text-xs text-slate-400">{h.helpers} {t.help.helped}</span>
-                    <button onClick={()=>helpReq(h.id)} className="text-xs font-bold px-3 py-1.5 rounded-xl bg-rose-50 text-rose-600 hover:bg-rose-100 transition-colors">{t.help.canHelp}</button>
-                  </div>
+                  {(()=>{const hh=toArr(h.helpers);const iH=hh.includes(user.name);return(<div className="mt-3 pt-3 border-t border-slate-50 flex items-center justify-between"><span className="text-xs text-slate-400">{hh.length} {t.help.helped}</span>{iH?<span className="text-xs font-bold text-rose-400 bg-rose-50 px-3 py-1.5 rounded-xl">✓ {ua?"Я відгукнувся":"Я откликнулся"}</span>:<button onClick={()=>helpReq(h.id)} className="text-xs font-bold px-3 py-1.5 rounded-xl bg-rose-50 text-rose-600 hover:bg-rose-100 transition-colors">{t.help.canHelp}</button>}</div>);})()}
                 </div>
               </div>
             ))}
@@ -1458,26 +1455,41 @@ function MainApp({lang,setLang,user,onChangeRole,onLogout}){
           {topTab==="parents"&&(
             <div>
               {canPost&&<div className="flex justify-end mb-3"><Btn onClick={()=>setModal("topPar")}>{t.top.addPar}</Btn></div>}
-              {topPar.length===0&&<Empty text={t.top.noPar}/>}
-              <div className="space-y-3">
-                {topPar.map((p,i)=>(
-                  <div key={p.id} className="card">
-                    <div className="h-1.5 bg-gradient-to-r from-violet-400 to-indigo-400"/>
-                    <div className="card-inner flex items-start gap-3">
-                      <div className="w-10 h-10 rounded-full bg-gradient-to-br from-violet-200 to-indigo-300 flex items-center justify-center text-lg flex-shrink-0 font-black text-violet-800">{i+1}</div>
-                      <div className="flex-1">
-                        <div className="flex items-center gap-2">
+              {(()=>{
+                const leaders=parents.filter(p=>helpCounts[p.id]>0).sort((a,b)=>(helpCounts[b.id]||0)-(helpCounts[a.id]||0));
+                const medals=["🥇","🥈","🥉"];
+                return(<>
+                  {leaders.length>0&&<div className="space-y-3 mb-3">{leaders.map((p,i)=>(
+                    <div key={p.id} className="card">
+                      <div className="h-1.5 bg-gradient-to-r from-violet-400 to-indigo-400"/>
+                      <div className="card-inner flex items-center gap-3">
+                        <div className="w-10 h-10 rounded-full bg-gradient-to-br from-violet-200 to-indigo-300 flex items-center justify-center text-xl flex-shrink-0">{i<3?medals[i]:<span className="font-black text-violet-800 text-sm">{i+1}</span>}</div>
+                        <div className="flex-1">
                           <h3 className="font-black text-slate-900">{ua?p.name:p.nameRu}</h3>
+                          <p className="text-xs font-bold text-violet-600 mt-0.5">{ua?"Активний помічник":"Активный помощник"}</p>
                         </div>
-                        <p className="text-xs font-bold text-violet-600 mt-0.5">{t.top.pCats[p.cat]}</p>
-                        <p className="text-sm text-slate-600 mt-1">{ua?p.reason:p.reasonRu}</p>
-                        <p className="text-xs text-slate-400 mt-1">{p.date}</p>
+                        <span className="text-sm font-black text-violet-700 bg-violet-100 px-3 py-1.5 rounded-full flex-shrink-0">🤝 {helpCounts[p.id]}</span>
                       </div>
-                      {canPost&&<button onClick={()=>setTopPar(x=>x.filter(q=>q.id!==p.id))} className="w-7 h-7 flex items-center justify-center rounded-lg bg-slate-100 hover:bg-red-100 text-slate-400 hover:text-red-500 text-sm transition-colors flex-shrink-0">✕</button>}
                     </div>
-                  </div>
-                ))}
-              </div>
+                  ))}</div>}
+                  {topPar.length>0&&<div className="space-y-3">{topPar.map((p,i)=>(
+                    <div key={p.id} className="card">
+                      <div className="h-1.5 bg-gradient-to-r from-violet-400 to-indigo-400"/>
+                      <div className="card-inner flex items-start gap-3">
+                        <div className="w-10 h-10 rounded-full bg-gradient-to-br from-violet-200 to-indigo-300 flex items-center justify-center text-lg flex-shrink-0 font-black text-violet-800">{i+1}</div>
+                        <div className="flex-1">
+                          <h3 className="font-black text-slate-900">{ua?p.name:p.nameRu}</h3>
+                          <p className="text-xs font-bold text-violet-600 mt-0.5">{t.top.pCats[p.cat]}</p>
+                          <p className="text-sm text-slate-600 mt-1">{ua?p.reason:p.reasonRu}</p>
+                          <p className="text-xs text-slate-400 mt-1">{p.date}</p>
+                        </div>
+                        {canPost&&<button onClick={()=>setTopPar(x=>x.filter(q=>q.id!==p.id))} className="w-7 h-7 flex items-center justify-center rounded-lg bg-slate-100 hover:bg-red-100 text-slate-400 hover:text-red-500 text-sm transition-colors flex-shrink-0">✕</button>}
+                      </div>
+                    </div>
+                  ))}</div>}
+                  {leaders.length===0&&topPar.length===0&&<Empty text={t.top.noPar}/>}
+                </>);
+              })()}
             </div>
           )}
           <Modal show={modal==="topSt"} onClose={()=>setModal(null)} title={t.top.addSt}>
