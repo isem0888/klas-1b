@@ -52,17 +52,17 @@ window.onerror=function(msg,src,line){
         { "rules": { ".read": true, ".write": true } }
      ═══════════════════════════════════════════════════════════════════ -->
 <script>
-window.TG_BOT_TOKEN   = "YOUR_BOT_TOKEN";    // 🔑 токен бота
-window.TG_ADMIN_CHAT  = "YOUR_CHAT_ID";       // 📩 ваш особистий chat_id
+window.TG_BOT_TOKEN   = "8989913497:AAG4so5_1jtUqUW_gPVy9oXbGa2yhXOss2E";
+window.TG_ADMIN_CHAT  = "6713808542";
 
 const FIREBASE_CONFIG = {
-  apiKey:            "YOUR_API_KEY",
-  authDomain:        "YOUR_PROJECT.firebaseapp.com",
-  databaseURL:       "https://YOUR_PROJECT-default-rtdb.firebaseio.com",
-  projectId:         "YOUR_PROJECT",
-  storageBucket:     "YOUR_PROJECT.appspot.com",
-  messagingSenderId: "YOUR_SENDER_ID",
-  appId:             "YOUR_APP_ID"
+  apiKey:            "AIzaSyAvSweaMli_wYZF1fk8NKF7FNVXLH2KEq0",
+  authDomain:        "klas-1b.firebaseapp.com",
+  databaseURL:       "https://klas-1b-default-rtdb.europe-west1.firebasedatabase.app",
+  projectId:         "klas-1b",
+  storageBucket:     "klas-1b.firebasestorage.app",
+  messagingSenderId: "710359204571",
+  appId:             "1:710359204571:web:cb612ec25f2cc5a09242fe"
 };
 try {
   firebase.initializeApp(FIREBASE_CONFIG);
@@ -565,6 +565,31 @@ function MainApp({lang,setLang,user,onChangeRole}){
   const pastEv=events.filter(e=>e.date<today());
   const filtPar=parents.filter(p=>{const q=psearch.toLowerCase();return(ua?p.name:p.nameRu).toLowerCase().includes(q)||(ua?p.child:p.childRu).toLowerCase().includes(q);});
 
+  // ── BADGE COUNTERS (нові елементи у вкладках) ─────────────────────────────
+  const [seenCounts,setSeenCounts]=useState(()=>{try{return JSON.parse(localStorage.getItem("rc_seen"))||{};}catch(e){return{};}});
+  // Поточна кількість елементів у кожній вкладці
+  const tabCounts={
+    ann:ann.length, fin:colls.length+exps.length, ev:events.length,
+    par:parents.length, pol:polls.length,
+    doc:docsData.length+teachers.length+schedule.length,
+    photo:photos.length, needs:needs.length, help:helpReqs.length,
+    top:topSt.length+topPar.length,
+  };
+  // Коли відкриваємо вкладку — зберігаємо поточну кількість як "переглянуто"
+  useEffect(()=>{
+    setSeenCounts(prev=>{
+      const next={...prev,[tab]:tabCounts[tab]};
+      localStorage.setItem("rc_seen",JSON.stringify(next));
+      return next;
+    });
+  },[tab,tabCounts[tab]]);
+  // Кількість нових (unseen) елементів.
+  // Якщо id ще не відстежувався (перший запуск) — вважаємо все переглянутим (0 badge)
+  const newBadge=id=>{
+    if(seenCounts[id]===undefined) return 0;
+    return Math.max(0,tabCounts[id]-seenCounts[id]);
+  };
+
   const TABS=[
     {id:"ann",icon:"📢",label:t.tabs.ann},
     {id:"fin",icon:"💰",label:t.tabs.fin},
@@ -601,12 +626,12 @@ function MainApp({lang,setLang,user,onChangeRole}){
         {/* TABS */}
         <div className="bg-white border-b border-slate-200 mt-2">
           <div className="max-w-2xl mx-auto flex overflow-x-auto noscroll">
-            {TABS.map(tb=>(
-              <button key={tb.id} onClick={()=>setTab(tb.id)} className={`flex-shrink-0 flex flex-col items-center px-3 py-2 border-b-2 transition-all ${tab===tb.id?"border-violet-600 text-violet-600":"border-transparent text-slate-400 hover:text-slate-600"}`}>
+            {TABS.map(tb=>{const badge=newBadge(tb.id);return(
+              <button key={tb.id} onClick={()=>setTab(tb.id)} className={`flex-shrink-0 flex flex-col items-center px-3 py-2 border-b-2 transition-all relative ${tab===tb.id?"border-violet-600 text-violet-600":"border-transparent text-slate-400 hover:text-slate-600"}`}>
                 <span className="tab-icon">{tb.icon}</span>
-                <span className="text-[10px] font-bold mt-0.5 whitespace-nowrap">{tb.label}</span>
+                <span className="text-[10px] font-bold mt-0.5 whitespace-nowrap">{tb.label}{badge>0&&<span className="ml-0.5 inline-flex items-center justify-center bg-rose-500 text-white rounded-full font-black" style={{fontSize:"9px",minWidth:"14px",height:"14px",padding:"0 3px",verticalAlign:"middle",lineHeight:"14px"}}>+{badge}</span>}</span>
               </button>
-            ))}
+            )})}
           </div>
         </div>
       </header>
