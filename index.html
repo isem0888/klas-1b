@@ -666,6 +666,7 @@ function MainApp({lang,setLang,user,onChangeRole,onLogout}){
 
   // edit states
   const [editAnn,setEditAnn]=useState(null);
+  const [editExp,setEditExp]=useState(null);
   const [editPar,setEditPar]=useState(null);
   const [editEv,setEditEv]=useState(null);
   const [editNeed,setEditNeed]=useState(null);
@@ -780,7 +781,8 @@ function MainApp({lang,setLang,user,onChangeRole,onLogout}){
     setFAnn({title:"",text:"",callToHelp:false});setModal(null);
   };
   const addEv=()=>{if(!fEv.title.trim()||!fEv.date)return;setEvents(p=>[...p,{id:Date.now(),title:fEv.title,titleRu:fEv.title,date:fEv.date,time:fEv.time,type:fEv.type,vol:[]}].sort((a,b)=>a.date.localeCompare(b.date)));broadcastTg(`📅 <b>Нова подія — 1Б клас</b>\n\n📌 <b>${fEv.title}</b>\n🗓 Дата: ${fEv.date}${fEv.time?"\n⏰ Час: "+fEv.time:""}\n\nПодробиці в застосунку @klas1b_bot`);setFEv({title:"",date:"",time:"",type:"meeting"});setModal(null);};
-  const addExp=()=>{if(!fExp.desc.trim()||!fExp.amount)return;setExps(p=>[...p,{id:Date.now(),desc:fExp.desc,descRu:fExp.desc,amount:+fExp.amount,date:today(),receipt:fExp.receipt||""}]);setFExp({desc:"",amount:"",receipt:""});setModal(null);};
+  const addExp=()=>{if(!fExp.desc.trim()||!fExp.amount)return;const amt=+fExp.amount;if(window._db)window._db.ref("klas1b/stats/totalSpent").transaction(v=>(v||0)+amt).catch(()=>{});setExps(p=>[...p,{id:Date.now(),desc:fExp.desc,descRu:fExp.desc,amount:amt,date:today(),receipt:fExp.receipt||""}]);setFExp({desc:"",amount:"",receipt:""});setModal(null);};
+  const saveExp=()=>{if(!editExp)return;const old=exps.find(e=>e.id===editExp.id);const delta=(+editExp.amount)-(old?old.amount:0);if(delta!==0&&window._db)window._db.ref("klas1b/stats/totalSpent").transaction(v=>(v||0)+delta).catch(()=>{});setExps(p=>p.map(e=>e.id!==editExp.id?e:{...e,desc:editExp.desc,descRu:editExp.desc,amount:+editExp.amount,receipt:editExp.receipt||""}));setEditExp(null);setModal(null);};
   const handleReceipt=e=>{const f=e.target.files[0];if(!f)return;const rd=new FileReader();rd.onload=ev=>setFExp(x=>({...x,receipt:ev.target.result}));rd.readAsDataURL(f);e.target.value="";};
   const addCol=()=>{if(!fCol.name.trim()||!fCol.amount)return;setColls(p=>[...p,{id:Date.now(),name:fCol.name,nameRu:fCol.name,amount:+fCol.amount,payments:parents.map((pr,i)=>({id:i,p:pr.name,pRu:pr.nameRu,paid:false}))}]);setFCol({name:"",amount:""});setModal(null);};
   const addPar=()=>{if(!fPar.name.trim())return;setParents(p=>[...p,{id:Date.now(),name:fPar.name,nameRu:fPar.name,child:fPar.child,childRu:fPar.child,phone:fPar.phone,role:fPar.role}]);setFPar({name:"",child:"",phone:"",role:"parent"});setModal(null);};
@@ -811,10 +813,21 @@ function MainApp({lang,setLang,user,onChangeRole,onLogout}){
   // ann media upload
   const handleMedia=e=>{const files=e.target.files;if(!files||!files.length)return;Array.from(files).forEach(f=>{const isVid=f.type.startsWith("video/");if(isVid){const url=URL.createObjectURL(f);setAnn(p=>[{id:Date.now()+Math.floor(Math.random()*1000),title:ua?"Відео":"Видео",titleRu:"Видео",text:"",textRu:"",media:url,mediaType:"video",date:today(),author:user.name,pinned:false},...p]);}else{const rd=new FileReader();rd.onload=ev=>setAnn(p=>[{id:Date.now()+Math.floor(Math.random()*1000),title:ua?"Фото":"Фото",titleRu:"Фото",text:"",textRu:"",media:ev.target.result,mediaType:"image",date:today(),author:user.name,pinned:false},...p]);rd.readAsDataURL(f);}});e.target.value="";};
 
-  const togglePay=(cId,pId)=>setColls(p=>p.map(c=>c.id!==cId?c:{...c,payments:c.payments.map(pm=>pm.id!==pId?pm:{...pm,paid:!pm.paid})}));
+  const togglePay=(cId,pId)=>setColls(p=>p.map(c=>{
+    if(c.id!==cId) return c;
+    const pm=c.payments.find(x=>x.id===pId);
+    if(!pm) return c;
+    const delta=pm.paid?-c.amount:c.amount;
+    if(window._db) window._db.ref("klas1b/stats/totalCollected").transaction(v=>(v||0)+delta).catch(()=>{});
+    return {...c,payments:c.payments.map(x=>x.id!==pId?x:{...x,paid:!x.paid})};
+  }));
   const updateColAmt=(id,amt)=>{if(!amt||isNaN(+amt)||+amt<=0)return;setColls(p=>p.map(c=>c.id!==id?c:{...c,amount:+amt}));setEditColAmt(null);};
   const closeCol=(id)=>{setColls(p=>p.map(c=>c.id!==id?c:{...c,closed:true}));markDone("closedColls");};
-  const delCol=(id)=>setColls(p=>p.filter(c=>c.id!==id));
+  const delCol=(id)=>{
+    const col=colls.find(c=>c.id===id);
+    if(col&&window._db){const paid=col.payments.filter(p=>p.paid).length*col.amount;if(paid>0)window._db.ref("klas1b/stats/totalCollected").transaction(v=>(v||0)-paid).catch(()=>{});}
+    setColls(p=>p.filter(c=>c.id!==id));
+  };
   const addColPhoto=(id,src)=>{setColls(p=>p.map(c=>c.id!==id?c:{...c,photos:[...toArr(c.photos),{id:Date.now()+Math.floor(Math.random()*1000),src,by:user.name,date:today()}]}));};
   const delColPhoto=(colId,phId)=>{setColls(p=>p.map(c=>c.id!==colId?c:{...c,photos:toArr(c.photos).filter(ph=>ph.id!==phId)}));};
   const handleColPhoto=e=>{const f=e.target.files?.[0];if(!f||!activeColId)return;const rd=new FileReader();rd.onload=ev=>addColPhoto(activeColId,ev.target.result);rd.readAsDataURL(f);e.target.value="";setActiveColId(null);};
@@ -1085,7 +1098,8 @@ function MainApp({lang,setLang,user,onChangeRole,onLogout}){
                       <div className="flex items-center gap-2">
                         {e.receipt&&<button onClick={()=>setPhotoModal({src:e.receipt,by:ua?"Чек":"Чек",date:e.date})} className="w-7 h-7 flex items-center justify-center rounded-lg bg-amber-50 hover:bg-amber-100 text-amber-500 text-sm transition-colors" title={ua?"Чек":"Чек"}>🧾</button>}
                         <span className="font-black text-red-500">−{e.amount.toLocaleString()} {t.cur}</span>
-                        {canFin&&<button onClick={()=>setExps(p=>p.filter(x=>x.id!==e.id))} className="w-6 h-6 flex items-center justify-center rounded-lg bg-slate-100 hover:bg-red-100 text-slate-400 hover:text-red-500 text-xs transition-colors">✕</button>}
+                        {canFin&&<button onClick={()=>{setEditExp({...e});setModal("editExp");}} className="w-6 h-6 flex items-center justify-center rounded-lg bg-slate-100 hover:bg-blue-100 text-slate-400 hover:text-blue-500 text-xs transition-colors">✏️</button>}
+                        {canFin&&<button onClick={()=>{if(window._db)window._db.ref("klas1b/stats/totalSpent").transaction(v=>(v||0)-e.amount).catch(()=>{});setExps(p=>p.filter(x=>x.id!==e.id));}} className="w-6 h-6 flex items-center justify-center rounded-lg bg-slate-100 hover:bg-red-100 text-slate-400 hover:text-red-500 text-xs transition-colors">✕</button>}
                       </div>
                     </div>
                   </div>
@@ -1110,6 +1124,28 @@ function MainApp({lang,setLang,user,onChangeRole,onLogout}){
               </Fld>
               <div className="flex gap-2 pt-1"><Btn cls="flex-1 text-center" onClick={addExp}>{t.common.add}</Btn><Btn v="sec" onClick={()=>setModal(null)}>{t.common.cancel}</Btn></div>
             </div>
+          </Modal>
+          <Modal show={modal==="editExp"} onClose={()=>{setModal(null);setEditExp(null);}} title={ua?"Редагувати витрату":"Редактировать расход"}>
+            {editExp&&(
+              <div className="space-y-3">
+                <Fld label={t.fin.expDesc}><input className={INP} value={editExp.desc} onChange={e=>setEditExp(v=>({...v,desc:e.target.value}))}/></Fld>
+                <Fld label={t.fin.expAmt}><input className={INP} type="number" value={editExp.amount} onChange={e=>setEditExp(v=>({...v,amount:e.target.value}))}/></Fld>
+                <Fld label={ua?"Фото чеку":"Фото чека"}>
+                  <input type="file" accept="image/*" className="hidden" id="editReceiptInput" onChange={e=>{const f=e.target.files?.[0];if(!f)return;const rd=new FileReader();rd.onload=ev=>setEditExp(v=>({...v,receipt:ev.target.result}));rd.readAsDataURL(f);e.target.value="";}}/>
+                  <button type="button" onClick={()=>document.getElementById("editReceiptInput").click()} className={`w-full flex items-center gap-2 px-3 py-2 rounded-xl border-2 border-dashed transition-colors text-sm font-medium ${editExp.receipt?"border-emerald-400 bg-emerald-50 text-emerald-700":"border-slate-200 bg-slate-50 text-slate-500 hover:border-violet-400 hover:text-violet-600"}`}>
+                    <span className="text-base">{editExp.receipt?"✅":"📎"}</span>
+                    {editExp.receipt?(ua?"Чек є — натисніть щоб змінити":"Чек есть — нажмите чтобы изменить"):(ua?"Додати фото чеку":"Добавить фото чека")}
+                  </button>
+                  {editExp.receipt&&(
+                    <div className="relative mt-2">
+                      <img src={editExp.receipt} alt="receipt" className="w-full rounded-xl max-h-48 object-cover"/>
+                      <button onClick={()=>setEditExp(v=>({...v,receipt:""}))} className="absolute top-1 right-1 w-6 h-6 rounded-full bg-black/60 text-white text-xs flex items-center justify-center">✕</button>
+                    </div>
+                  )}
+                </Fld>
+                <div className="flex gap-2 pt-1"><Btn cls="flex-1 text-center" onClick={saveExp}>{ua?"Зберегти":"Сохранить"}</Btn><Btn v="sec" onClick={()=>{setModal(null);setEditExp(null);}}>{t.common.cancel}</Btn></div>
+              </div>
+            )}
           </Modal>
         </div>
       )}
@@ -1350,21 +1386,6 @@ function MainApp({lang,setLang,user,onChangeRole,onLogout}){
               </button>
             ))}
           </div>
-          {/* Photo viewer modal */}
-          {photoModal&&(
-            <div className="fixed inset-0 bg-black/90 flex flex-col items-center justify-center z-50 p-4" onClick={()=>setPhotoModal(null)}>
-              <img src={photoModal.src} alt="" className="max-w-full max-h-[80vh] rounded-2xl shadow-2xl object-contain"/>
-              <div className="mt-3 text-white/70 text-sm text-center">
-                <span>{t.photo.by}: {photoModal.by}</span>
-                <span className="mx-2">·</span>
-                <span>{photoModal.date}</span>
-              </div>
-              <div className="flex gap-3 mt-4" onClick={e=>e.stopPropagation()}>
-                <button className="text-white/60 hover:text-white text-sm px-4 py-2 rounded-xl border border-white/20 hover:border-white/50 transition-colors" onClick={()=>setPhotoModal(null)}>{t.common.close} ✕</button>
-                <button className="text-white text-sm px-4 py-2 rounded-xl bg-red-500/80 hover:bg-red-500 transition-colors font-bold" onClick={()=>{setPhotos(p=>p.filter(x=>x.id!==photoModal.id));setPhotoModal(null);}}>🗑 {ua?"Видалити":"Удалить"}</button>
-              </div>
-            </div>
-          )}
         </div>
       )}
 
@@ -1577,6 +1598,22 @@ function MainApp({lang,setLang,user,onChangeRole,onLogout}){
       </main>
 
       {/* ── СТАТИСТИКА МОДАЛ ─────────────────────────────────────────── */}
+      {/* ── ГЛОБАЛЬНИЙ ПЕРЕГЛЯД ФОТО / ЧЕКА ─────────────────────────────── */}
+      {photoModal&&(
+        <div className="fixed inset-0 bg-black/90 flex flex-col items-center justify-center z-50 p-4" onClick={()=>setPhotoModal(null)}>
+          <img src={photoModal.src} alt="" className="max-w-full max-h-[80vh] rounded-2xl shadow-2xl object-contain"/>
+          <div className="mt-3 text-white/70 text-sm text-center">
+            <span>{t.photo.by}: {photoModal.by}</span>
+            <span className="mx-2">·</span>
+            <span>{photoModal.date}</span>
+          </div>
+          <div className="flex gap-3 mt-4" onClick={e=>e.stopPropagation()}>
+            <button className="text-white/60 hover:text-white text-sm px-4 py-2 rounded-xl border border-white/20 hover:border-white/50 transition-colors" onClick={()=>setPhotoModal(null)}>{t.common.close} ✕</button>
+            {photos.some(x=>x.id===photoModal.id)&&<button className="text-white text-sm px-4 py-2 rounded-xl bg-red-500/80 hover:bg-red-500 transition-colors font-bold" onClick={()=>{setPhotos(p=>p.filter(x=>x.id!==photoModal.id));setPhotoModal(null);}}>🗑 {ua?"Видалити":"Удалить"}</button>}
+          </div>
+        </div>
+      )}
+
       {showStats&&(()=>{
         const yr=new Date().getFullYear().toString();
         const byYr=id=>String(new Date(Number(id)||0).getFullYear())===yr;
@@ -1587,7 +1624,7 @@ function MainApp({lang,setLang,user,onChangeRole,onLogout}){
         const needDone=needs.filter(n=>n.done).length;
         const rows=[
           {icon:"✅",label:ua?"Вирішено оголошень":"Решено объявлений",val:stats.resolvedCount||0,sub:ua?"заклики до допомоги закриті головою":"призывы к помощи закрытые председателем"},
-          {icon:"💰",label:ua?"Зібрано коштів":"Собрано средств",val:`${totColl.toLocaleString()} грн`,sub:ua?`Витрачено: ${totExp.toLocaleString()} грн • Залишок: ${(totColl-totExp).toLocaleString()} грн`:`Потрачено: ${totExp.toLocaleString()} грн • Остаток: ${(totColl-totExp).toLocaleString()} грн`},
+          {icon:"💰",label:ua?"Зібрано коштів (всього)":"Собрано средств (всего)",val:`${(stats.totalCollected||0).toLocaleString()} грн`,sub:ua?`Витрачено: ${(stats.totalSpent||0).toLocaleString()} грн • Залишок: ${((stats.totalCollected||0)-(stats.totalSpent||0)).toLocaleString()} грн`:`Потрачено: ${(stats.totalSpent||0).toLocaleString()} грн • Остаток: ${((stats.totalCollected||0)-(stats.totalSpent||0)).toLocaleString()} грн`},
           {icon:"📅",label:ua?"Подій завершено":"Событий завершено",val:stats.eventsDone||0,sub:ua?`Всього у ${yr}: ${evYear}`:`Всего в ${yr}: ${evYear}`},
           {icon:"🗳",label:ua?"Опитувань завершено":"Опросов завершено",val:stats.pollsDone||0,sub:ua?`Всього у ${yr}: ${pollYear}`:`Всего в ${yr}: ${pollYear}`},
           {icon:"📋",label:ua?"Потреб виконано":"Нужд выполнено",val:stats.needsDone||0,sub:ua?`Всього у ${yr}: ${needYear}`:`Всего в ${yr}: ${needYear}`},
@@ -1613,7 +1650,7 @@ function MainApp({lang,setLang,user,onChangeRole,onLogout}){
                     <span className="font-black text-violet-700 text-lg flex-shrink-0">{r.val}</span>
                   </div>
                 ))}
-                {user.role==="chairman"&&<button onClick={()=>{if(window.confirm(ua?"Скинути всю статистику до нуля?":"Сбросить всю статистику до нуля?"))window._db&&window._db.ref("klas1b/stats").set({resolvedCount:0,pollsDone:0,eventsDone:0,needsDone:0,helpDone:0,closedColls:0}).catch(()=>{});}} className="w-full mt-2 py-2.5 rounded-2xl text-xs font-bold text-slate-400 hover:text-red-500 hover:bg-red-50 border border-slate-200 hover:border-red-200 transition-colors">{ua?"🗑 Скинути статистику":"🗑 Сбросить статистику"}</button>}
+                {user.role==="chairman"&&<button onClick={()=>{if(window.confirm(ua?"Скинути всю статистику до нуля?":"Сбросить всю статистику до нуля?"))window._db&&window._db.ref("klas1b/stats").set({resolvedCount:0,pollsDone:0,eventsDone:0,needsDone:0,helpDone:0,closedColls:0,totalCollected:0,totalSpent:0}).catch(()=>{});}} className="w-full mt-2 py-2.5 rounded-2xl text-xs font-bold text-slate-400 hover:text-red-500 hover:bg-red-50 border border-slate-200 hover:border-red-200 transition-colors">{ua?"🗑 Скинути статистику":"🗑 Сбросить статистику"}</button>}
               </div>
             </div>
           </div>
