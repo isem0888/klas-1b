@@ -654,12 +654,15 @@ function MainApp({lang,setLang,user,onChangeRole,onLogout}){
   },[]);
   const markDone=(key)=>{if(window._db)window._db.ref(`klas1b/stats/${key}`).transaction(v=>(v||0)+1).catch(()=>{});};
   const [showStats,setShowStats]=useState(false);
+  const [editColAmt,setEditColAmt]=useState(null);
+  const [activeColId,setActiveColId]=useState(null);
   const [finTab,setFinTab]=useState("coll");
   const [topTab,setTopTab]=useState("students");
   const [psearch,setPsearch]=useState("");
   const fileRef=useRef(null);
   const mediaRef=useRef(null);
   const receiptRef=useRef(null);
+  const colPhotoRef=useRef(null);
 
   // edit states
   const [editAnn,setEditAnn]=useState(null);
@@ -730,10 +733,12 @@ function MainApp({lang,setLang,user,onChangeRole,onLogout}){
   const totExp=exps.reduce((s,e)=>s+e.amount,0);
   // Дні народження дітей з профілів батьків (щорічні)
   const bDaysUntil = d => {
-    const now=new Date(); const b=new Date(d);
-    b.setFullYear(now.getFullYear());
-    if(b<now) b.setFullYear(now.getFullYear()+1);
-    return Math.ceil((b-now)/86400000);
+    const now=new Date();
+    const nowDay=new Date(now.getFullYear(),now.getMonth(),now.getDate());
+    const b=new Date(d);
+    const bDay=new Date(now.getFullYear(),b.getMonth(),b.getDate());
+    if(bDay<nowDay) bDay.setFullYear(now.getFullYear()+1);
+    return Math.round((bDay-nowDay)/86400000);
   };
   const childBdays = parents.filter(p=>p.childBirthday)
     .map(p=>({n:ua?p.child:p.childRu||p.child, nRu:p.childRu||p.child, d:p.childBirthday}))
@@ -807,6 +812,12 @@ function MainApp({lang,setLang,user,onChangeRole,onLogout}){
   const handleMedia=e=>{const files=e.target.files;if(!files||!files.length)return;Array.from(files).forEach(f=>{const isVid=f.type.startsWith("video/");if(isVid){const url=URL.createObjectURL(f);setAnn(p=>[{id:Date.now()+Math.floor(Math.random()*1000),title:ua?"Відео":"Видео",titleRu:"Видео",text:"",textRu:"",media:url,mediaType:"video",date:today(),author:user.name,pinned:false},...p]);}else{const rd=new FileReader();rd.onload=ev=>setAnn(p=>[{id:Date.now()+Math.floor(Math.random()*1000),title:ua?"Фото":"Фото",titleRu:"Фото",text:"",textRu:"",media:ev.target.result,mediaType:"image",date:today(),author:user.name,pinned:false},...p]);rd.readAsDataURL(f);}});e.target.value="";};
 
   const togglePay=(cId,pId)=>setColls(p=>p.map(c=>c.id!==cId?c:{...c,payments:c.payments.map(pm=>pm.id!==pId?pm:{...pm,paid:!pm.paid})}));
+  const updateColAmt=(id,amt)=>{if(!amt||isNaN(+amt)||+amt<=0)return;setColls(p=>p.map(c=>c.id!==id?c:{...c,amount:+amt}));setEditColAmt(null);};
+  const closeCol=(id)=>{setColls(p=>p.map(c=>c.id!==id?c:{...c,closed:true}));markDone("closedColls");};
+  const delCol=(id)=>setColls(p=>p.filter(c=>c.id!==id));
+  const addColPhoto=(id,src)=>{setColls(p=>p.map(c=>c.id!==id?c:{...c,photos:[...toArr(c.photos),{id:Date.now()+Math.floor(Math.random()*1000),src,by:user.name,date:today()}]}));};
+  const delColPhoto=(colId,phId)=>{setColls(p=>p.map(c=>c.id!==colId?c:{...c,photos:toArr(c.photos).filter(ph=>ph.id!==phId)}));};
+  const handleColPhoto=e=>{const f=e.target.files?.[0];if(!f||!activeColId)return;const rd=new FileReader();rd.onload=ev=>addColPhoto(activeColId,ev.target.result);rd.readAsDataURL(f);e.target.value="";setActiveColId(null);};
   const joinVol=id=>setEvents(p=>p.map(e=>{const v=e.vol||[];return e.id!==id||v.includes(user.name)?e:{...e,vol:[...v,user.name]};}));
   const leaveVol=id=>setEvents(p=>p.map(e=>e.id!==id?e:{...e,vol:(e.vol||[]).filter(n=>n!==user.name)}));
   // voted зберігається у Firebase всередині опитування (voters: {userId: optIdx})
@@ -1000,32 +1011,62 @@ function MainApp({lang,setLang,user,onChangeRole,onLogout}){
             <div>
               {canFin&&<div className="flex justify-end mb-2"><Btn v="ghost" onClick={()=>setModal("col")}>{t.fin.newColl}</Btn></div>}
               {!canFin&&colls.length===0&&<Empty text={ua?"Зборів поки немає":"Сборов пока нет"}/>}
+              <input ref={colPhotoRef} type="file" accept="image/*" className="hidden" onChange={handleColPhoto}/>
               <div className="space-y-3">
                 {colls.map(col=>{
                   const pd=col.payments.filter(p=>p.paid).length;const pct=col.payments.length?Math.round(pd/col.payments.length*100):0;
+                  const colPhotos=toArr(col.photos);
                   return(
                     <div key={col.id} className="card">
-                      <div className="h-1.5" style={{background:"linear-gradient(90deg,#10b981,#0891b2)"}}/>
+                      <div className="h-1.5" style={{background:col.closed?"linear-gradient(90deg,#6b7280,#9ca3af)":"linear-gradient(90deg,#10b981,#0891b2)"}}/>
                       <div className="card-inner">
-                        <div className="flex justify-between mb-2">
-                          <span className="font-bold text-slate-800">{ua?col.name:col.nameRu}</span>
-                          <span className="font-black text-emerald-600">{col.amount} {t.cur}{t.fin.pp}</span>
+                        <div className="flex items-start justify-between gap-2 mb-2">
+                          <span className="font-bold text-slate-800 flex-1">{ua?col.name:col.nameRu}</span>
+                          <div className="flex items-center gap-1.5 flex-shrink-0 flex-wrap justify-end">
+                            {canFin&&editColAmt?.id===col.id
+                              ?<input autoFocus type="number" className="w-20 text-right text-emerald-600 font-black text-sm border-2 border-emerald-300 rounded-lg px-1.5 py-0.5 outline-none" value={editColAmt.val} onChange={e=>setEditColAmt(v=>({...v,val:e.target.value}))} onBlur={()=>updateColAmt(col.id,editColAmt.val)} onKeyDown={e=>{if(e.key==='Enter')updateColAmt(col.id,editColAmt.val);if(e.key==='Escape')setEditColAmt(null);}}/>
+                              :<button onClick={()=>canFin&&!col.closed&&setEditColAmt({id:col.id,val:col.amount})} className={`font-black text-sm ${col.closed?"text-slate-400":"text-emerald-600"} ${canFin&&!col.closed?"hover:underline cursor-pointer":""}`}>{col.amount} {t.cur}{t.fin.pp}</button>
+                            }
+                            {col.closed
+                              ?<span className="text-xs font-bold px-2 py-0.5 rounded-full bg-slate-100 text-slate-500">✅ {ua?"Завершений":"Завершён"}</span>
+                              :canFin&&<button onClick={()=>{if(window.confirm(ua?"Завершити цей збір?":"Завершить этот сбор?"))closeCol(col.id);}} className="text-xs font-bold px-2 py-1 rounded-full bg-emerald-50 hover:bg-emerald-100 text-emerald-700 border border-emerald-200 transition-colors">{ua?"Завершити":"Завершить"}</button>
+                            }
+                            {canFin&&<button onClick={()=>delCol(col.id)} className="w-6 h-6 flex items-center justify-center rounded-lg bg-slate-100 hover:bg-red-100 text-slate-400 hover:text-red-500 text-xs transition-colors">✕</button>}
+                          </div>
                         </div>
                         <div className="flex items-center gap-2 mb-3">
-                          <div className="flex-1 bg-slate-100 rounded-full h-2"><div className="bg-gradient-to-r from-emerald-400 to-teal-500 h-2 rounded-full transition-all" style={{width:`${pct}%`}}/></div>
+                          <div className="flex-1 bg-slate-100 rounded-full h-2"><div className={`h-2 rounded-full transition-all ${col.closed?"bg-slate-400":"bg-gradient-to-r from-emerald-400 to-teal-500"}`} style={{width:`${pct}%`}}/></div>
                           <span className="text-xs font-bold text-slate-500">{pd}/{col.payments.length}</span>
                         </div>
                         <div className="divide-y divide-slate-50">
                           {col.payments.map(p=>(
                             <div key={p.id} className="flex items-center justify-between py-2">
                               <span className="text-sm text-slate-700">{ua?p.p:p.pRu}</span>
-                              {canFin
+                              {canFin&&!col.closed
                                 ?<button onClick={()=>togglePay(col.id,p.id)} className={`text-xs px-3 py-1 rounded-full font-bold transition-colors ${p.paid?"bg-emerald-100 text-emerald-700 hover:bg-emerald-200":"bg-slate-100 text-slate-500 hover:bg-slate-200"}`}>{p.paid?t.fin.paid:t.fin.notPaid}</button>
                                 :<span className={`text-xs px-3 py-1 rounded-full font-bold ${p.paid?"bg-emerald-100 text-emerald-700":"bg-slate-100 text-slate-500"}`}>{p.paid?t.fin.paid:t.fin.notPaid}</span>
                               }
                             </div>
                           ))}
                         </div>
+                        {(colPhotos.length>0||canFin)&&(
+                          <div className="mt-3 pt-3 border-t border-slate-100">
+                            <div className="flex items-center justify-between mb-2">
+                              <span className="text-xs font-bold text-slate-500">📸 {ua?"Фотозвіт":"Фотоотчёт"}{colPhotos.length>0?` (${colPhotos.length})`:""}</span>
+                              {canFin&&<button onClick={()=>{setActiveColId(col.id);setTimeout(()=>colPhotoRef.current&&colPhotoRef.current.click(),50);}} className="text-xs font-bold px-2.5 py-1 rounded-lg bg-violet-100 hover:bg-violet-200 text-violet-700 transition-colors">+ {ua?"Додати":"Добавить"}</button>}
+                            </div>
+                            {colPhotos.length>0&&(
+                              <div className="photo-grid">
+                                {colPhotos.map(ph=>(
+                                  <div key={ph.id} className="relative">
+                                    <img src={ph.src} alt="" className="w-full aspect-square object-cover rounded-xl cursor-pointer" onClick={()=>setPhotoModal({src:ph.src,by:ph.by,date:ph.date})}/>
+                                    {canFin&&<button onClick={()=>delColPhoto(col.id,ph.id)} className="absolute top-1 right-1 w-5 h-5 rounded-full bg-black/60 text-white text-xs flex items-center justify-center leading-none">✕</button>}
+                                  </div>
+                                ))}
+                              </div>
+                            )}
+                          </div>
+                        )}
                       </div>
                     </div>
                   );
@@ -1551,6 +1592,7 @@ function MainApp({lang,setLang,user,onChangeRole,onLogout}){
           {icon:"🗳",label:ua?"Опитувань завершено":"Опросов завершено",val:stats.pollsDone||0,sub:ua?`Всього у ${yr}: ${pollYear}`:`Всего в ${yr}: ${pollYear}`},
           {icon:"📋",label:ua?"Потреб виконано":"Нужд выполнено",val:stats.needsDone||0,sub:ua?`Всього у ${yr}: ${needYear}`:`Всего в ${yr}: ${needYear}`},
           {icon:"🤝",label:ua?"Запитів вирішено":"Запросов решено",val:stats.helpDone||0,sub:ua?`Всього у ${yr}: ${helpYear}`:`Всего в ${yr}: ${helpYear}`},
+          {icon:"💼",label:ua?"Зборів завершено":"Сборов завершено",val:stats.closedColls||0,sub:ua?`Активних: ${colls.filter(c=>!c.closed).length} • Всього: ${colls.length}`:`Активных: ${colls.filter(c=>!c.closed).length} • Всего: ${colls.length}`},
           {icon:"📸",label:ua?"Фото у альбомі":"Фото в альбоме",val:photos.length,sub:ua?`Додано у ${yr}: ${photos.filter(p=>byYr(p.id)).length}`:`Добавлено в ${yr}: ${photos.filter(p=>byYr(p.id)).length}`},
         ];
         return(
@@ -1571,7 +1613,7 @@ function MainApp({lang,setLang,user,onChangeRole,onLogout}){
                     <span className="font-black text-violet-700 text-lg flex-shrink-0">{r.val}</span>
                   </div>
                 ))}
-                {user.role==="chairman"&&<button onClick={()=>{if(window.confirm(ua?"Скинути всю статистику до нуля?":"Сбросить всю статистику до нуля?"))window._db&&window._db.ref("klas1b/stats").set({resolvedCount:0,pollsDone:0,eventsDone:0,needsDone:0,helpDone:0}).catch(()=>{});}} className="w-full mt-2 py-2.5 rounded-2xl text-xs font-bold text-slate-400 hover:text-red-500 hover:bg-red-50 border border-slate-200 hover:border-red-200 transition-colors">{ua?"🗑 Скинути статистику":"🗑 Сбросить статистику"}</button>}
+                {user.role==="chairman"&&<button onClick={()=>{if(window.confirm(ua?"Скинути всю статистику до нуля?":"Сбросить всю статистику до нуля?"))window._db&&window._db.ref("klas1b/stats").set({resolvedCount:0,pollsDone:0,eventsDone:0,needsDone:0,helpDone:0,closedColls:0}).catch(()=>{});}} className="w-full mt-2 py-2.5 rounded-2xl text-xs font-bold text-slate-400 hover:text-red-500 hover:bg-red-50 border border-slate-200 hover:border-red-200 transition-colors">{ua?"🗑 Скинути статистику":"🗑 Сбросить статистику"}</button>}
               </div>
             </div>
           </div>
