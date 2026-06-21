@@ -385,7 +385,7 @@ function RegScreen({lang,setLang,onReg}){
   const _tgUser=_parseTgUser();
   const tgAutoUser=_tgUser?.username||"";
   const tgAutoId=_tgUser?.id?Number(_tgUser.id):null;
-  const [form,setForm]=useState({name:"",phone:"+380",phone2:"+380",child:"",childBirthday:"",role:"parent",pass:"",photo:"",tgUsername:tgAutoUser,tgChatId:tgAutoId?String(tgAutoId):""});
+  const [form,setForm]=useState({name:"",phone:"+380",phone2:"+380",child:"",childBirthday:"",role:"parent",pass:"",photo:"",tgUsername:tgAutoUser,tgChatId:tgAutoId?String(tgAutoId):"",skipTg:false});
   const [c1,setC1]=useState(false);const[c2,setC2]=useState(false);
   const [err,setErr]=useState("");const[errNoTg,setErrNoTg]=useState(false);const[showTgHint,setShowTgHint]=useState(false);const[cm,setCm]=useState(null);
   const photoRef=useRef(null);
@@ -400,7 +400,8 @@ function RegScreen({lang,setLang,onReg}){
   };
   const canSubmit=c1&&c2;
   const submit=()=>{
-    if(!form.name.trim()||!form.child.trim()||!form.tgUsername.trim()){setErr(lang==="ua"?"Заповніть всі обов'язкові поля (ім'я, дитина, Telegram)":"Заполните все обязательные поля (имя, ребёнок, Telegram)");setErrNoTg(!form.tgUsername.trim());return;}
+    if(!form.name.trim()||!form.child.trim()){setErr(lang==="ua"?"Заповніть всі обов'язкові поля (ім'я та дитина)":"Заполните все обязательные поля (имя и ребёнок)");return;}
+    if(!form.skipTg&&!tgAutoId&&!form.tgUsername.trim()){setErr(lang==="ua"?"Вкажіть Telegram username або натисніть «Пропустити»":"Укажите Telegram username или нажмите «Пропустить»");setErrNoTg(true);return;}
     setErrNoTg(false);
     if(!c1||!c2){setErr(r.err);return;}
     if(needPass&&form.pass!==ROLE_PASSWORDS[form.role]){setErr(r.wrongPass);return;}
@@ -493,12 +494,21 @@ function RegScreen({lang,setLang,onReg}){
           <Fld label={lang==="ua"?"Додатковий телефон (необов'язково)":"Дополнительный телефон (необязательно)"}><input className={INP} placeholder="+380 00 000 00 00" value={form.phone2} onChange={e=>{const v=e.target.value;set("phone2",v.startsWith("+380")?v:"+380");}}/></Fld>
           <Fld label={r.child}><input className={INP} placeholder={r.child} value={form.child} onChange={e=>set("child",e.target.value)}/></Fld>
           <Fld label={r.childBday}><input className={INP} type="date" value={form.childBirthday} onChange={e=>set("childBirthday",e.target.value)}/></Fld>
-          <Fld label={lang==="ua"?"Telegram юзернейм *":"Telegram username *"}>
-            <div className="relative">
-              <span className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 font-bold text-sm">@</span>
-              <input className={INP} style={{paddingLeft:"1.75rem"}} placeholder="username" value={form.tgUsername} onChange={e=>set("tgUsername",e.target.value.replace(/^@/,""))}/>
-            </div>
-            {tgAutoUser&&<p className="text-xs text-emerald-600 mt-1 font-medium">✓ {lang==="ua"?"Визначено автоматично з Telegram":"Определён автоматически из Telegram"}</p>}
+          <Fld label={lang==="ua"?`Telegram юзернейм${form.skipTg?"":" *"}`:` Telegram username${form.skipTg?"":" *"}`}>
+            {form.skipTg
+              ? <div className="flex items-center gap-2">
+                  <div className={`${INP} flex-1 bg-slate-50 text-slate-400 text-sm`}>{lang==="ua"?"Без юзернейму — сповіщення не надходитимуть":"Без username — уведомления не будут приходить"}</div>
+                  <button type="button" onClick={()=>set("skipTg",false)} className="text-xs text-violet-600 hover:text-violet-800 font-semibold whitespace-nowrap underline underline-offset-2">{lang==="ua"?"Вказати":"Указать"}</button>
+                </div>
+              : <>
+                  <div className="relative">
+                    <span className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 font-bold text-sm">@</span>
+                    <input className={INP} style={{paddingLeft:"1.75rem"}} placeholder="username" value={form.tgUsername} onChange={e=>set("tgUsername",e.target.value.replace(/^@/,""))} disabled={!!tgAutoId}/>
+                  </div>
+                  {tgAutoUser&&<p className="text-xs text-emerald-600 mt-1 font-medium">✓ {lang==="ua"?"Визначено автоматично з Telegram":"Определён автоматически из Telegram"}</p>}
+                  {!tgAutoId&&<button type="button" onClick={()=>{set("skipTg",true);set("tgUsername","");}} className="mt-1.5 text-xs text-slate-400 hover:text-slate-600 font-medium underline underline-offset-2 decoration-dashed">{lang==="ua"?"Пропустити — не вказувати юзернейм":"Пропустить — не указывать username"}</button>}
+                </>
+            }
           </Fld>
           <Fld label={r.role}><select className={INP} value={form.role} onChange={e=>set("role",e.target.value)}>{Object.entries(t.roles).map(([k,v])=><option key={k} value={k}>{v}</option>)}</select></Fld>
           {needPass&&<Fld label={r.pass}><input className={INP} type="password" placeholder={r.passHint} value={form.pass} onChange={e=>set("pass",e.target.value)}/></Fld>}
