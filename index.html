@@ -450,12 +450,16 @@ function RegScreen({lang,setLang,onReg}){
     if(window._db){
       window._db.ref(`${DB_ROOT}/parents`).once('value',snap=>{
         const all=snap.val()?Object.values(snap.val()):[];
-        const normalize=s=>s?s.replace(/\D/g,""):"";
+        // Останні 9 цифр — щоб 0961234567 = 380961234567 = +380961234567
+        const normalize=s=>{const d=(s||"").replace(/\D/g,"");return d.length>=9?d.slice(-9):d;};
+        const normName=s=>(s||"").toLowerCase().replace(/\s+/g," ").trim();
         const ph1=normalize(form.phone);
         const ph2=normalize(phone2clean);
         const existing=all.find(p=>{
           const ep=normalize(p.phone); const ep2=normalize(p.phone2||"");
-          return (ph1&&(ep===ph1||ep2===ph1))||(ph2&&(ep===ph2||ep2===ph2));
+          const phoneMatch=(ph1&&ep&&ep===ph1)||(ph1&&ep2&&ep2===ph1)||(ph2&&ep&&ep===ph2)||(ph2&&ep2&&ep2===ph2);
+          const nameMatch=normName(p.name)===normName(form.name);
+          return phoneMatch||nameMatch;
         });
         if(existing) doReg(existing.id,existing);
         else doReg(Date.now(),null);
@@ -796,6 +800,26 @@ function MainApp({lang,setLang,user,onChangeRole,onLogout}){
   const handleReceipt=e=>{const f=e.target.files[0];if(!f)return;const rd=new FileReader();rd.onload=ev=>setFExp(x=>({...x,receipt:ev.target.result}));rd.readAsDataURL(f);e.target.value="";};
   const addCol=()=>{if(!fCol.name.trim()||!fCol.amount)return;setColls(p=>[...p,{id:Date.now(),name:fCol.name,nameRu:fCol.name,amount:+fCol.amount,payments:parents.map((pr,i)=>({id:i,p:pr.name,pRu:pr.nameRu,paid:false}))}]);setFCol({name:"",amount:""});setModal(null);};
   const addPar=()=>{if(!fPar.name.trim())return;setParents(p=>[...p,{id:Date.now(),name:fPar.name,nameRu:fPar.name,child:fPar.child,childRu:fPar.child,phone:fPar.phone,role:fPar.role}]);setFPar({name:"",child:"",phone:"",role:"parent"});setModal(null);};
+  const dedupeParents=()=>{
+    const normPh=s=>{const d=(s||"").replace(/\D/g,"");return d.length>=9?d.slice(-9):d;};
+    const normNm=s=>(s||"").toLowerCase().replace(/\s+/g," ").trim();
+    const seen={}; const toRemove=[];
+    // Пріоритет: registered (має tgUsername або tgId) > більше полів
+    const scored=p=>(p.tgUsername?10:0)+(p.tgId?5:0)+(p.photo?2:0)+(p.registeredAt?3:0)+(p.phone?1:0);
+    const sorted=[...parents].sort((a,b)=>scored(b)-scored(a));
+    sorted.forEach(p=>{
+      const keys=[];
+      const ph=normPh(p.phone); if(ph) keys.push("ph:"+ph);
+      const nm=normNm(p.name); if(nm) keys.push("nm:"+nm);
+      let isDup=false;
+      keys.forEach(k=>{if(seen[k]){isDup=true;}else seen[k]=p.id;});
+      if(isDup) toRemove.push(p.id);
+    });
+    if(toRemove.length===0){window.alert(ua?"Дублікатів не знайдено 👍":"Дубликатов не найдено 👍");return;}
+    if(window.confirm(ua?`Знайдено ${toRemove.length} дублікат(ів). Залишиться тільки версія з більшою кількістю даних (зареєстрована). Продовжити?`:`Найдено ${toRemove.length} дублика(тов). Останется только версия с большим количеством данных (зарегистрированная). Продолжить?`)){
+      setParents(p=>p.filter(x=>!toRemove.includes(x.id)));
+    }
+  };
   const addPoll=()=>{const opts=fPoll.opts.filter(o=>o.trim());if(!fPoll.q.trim()||opts.length<2)return;setPolls(p=>[...p,{id:Date.now(),q:fPoll.q,qRu:fPoll.q,opts,optsRu:opts,votes:opts.map(()=>0),active:true,deadline:fPoll.deadline||""}]);broadcastTg(`🗳 <b>${ua?"Нове опитування":"Новый опрос"}</b>\n\n${fPoll.q}\n\n${opts.map((o,i)=>` ${i+1}. ${o}`).join("\n")}\n\n<i>${ua?"Батьківський комітет 1Б":"Родительский комитет 1Б"}</i>`);setFPoll({q:"",opts:["","","",""],deadline:""});setModal(null);};
   const addNeed=()=>{if(!fNeed.item.trim())return;setNeeds(p=>[...p,{id:Date.now(),item:fNeed.item,itemRu:fNeed.item,qty:fNeed.qty,desc:fNeed.desc,descRu:fNeed.desc,helpers:[],done:false}]);broadcastTg(`🛒 <b>Нова потреба класу — 1Б</b>\n\n📦 <b>${fNeed.item}</b>${fNeed.qty?"\n🔢 Кількість: "+fNeed.qty:""}${fNeed.desc?"\n📝 "+fNeed.desc:""}\n\nПодробиці в застосунку @klas1b_bot`);setFNeed({item:"",qty:"",desc:""});setModal(null);};
   const addHelp=()=>{if(!fHelp.desc.trim())return;const nm=fHelp.anon?(ua?"Анонімно":"Анонимно"):fHelp.name||user.name;setHelpReqs(p=>[{id:Date.now(),type:fHelp.type,anon:fHelp.anon,name:nm,nameRu:nm,desc:fHelp.desc,descRu:fHelp.desc,contact:fHelp.contact,date:today(),helpers:[]},...p]);broadcastTg(`🆘 <b>Запит про допомогу — 1Б клас</b>\n\n👤 <b>${nm}</b>\n📝 ${fHelp.desc}${fHelp.contact?"\n📞 "+fHelp.contact:""}\n\nВідгукнись в застосунку @klas1b_bot`);setFHelp({type:"food",anon:false,name:"",desc:"",contact:""});setModal(null);};
@@ -1180,7 +1204,13 @@ function MainApp({lang,setLang,user,onChangeRole,onLogout}){
       {/* ─── БАТЬКИ ─────────────────────────────────────────────────── */}
       {tab==="par"&&(
         <div>
-          <div className="flex justify-between items-center mb-3"><h2 className="font-black text-slate-800 text-lg">{t.par.title} ({parents.length})</h2><Btn onClick={()=>setModal("par")}>{t.par.add}</Btn></div>
+          <div className="flex justify-between items-center mb-3">
+            <h2 className="font-black text-slate-800 text-lg">{t.par.title} ({parents.length})</h2>
+            <div className="flex gap-2">
+              {(canPost&&(user.role==="admin"||user.role==="chairman"))&&<button onClick={dedupeParents} className="text-xs font-bold px-3 py-1.5 rounded-xl bg-amber-100 hover:bg-amber-200 text-amber-700 transition-colors" title={ua?"Видалити дублікати":"Удалить дубликаты"}>🧹 {ua?"Дублікати":"Дубликаты"}</button>}
+              <Btn onClick={()=>setModal("par")}>{t.par.add}</Btn>
+            </div>
+          </div>
           <input className={`${INP} mb-3`} placeholder={t.par.search} value={psearch} onChange={e=>setPsearch(e.target.value)}/>
           {filtPar.filter(p=>p.role!=="parent").length>0&&<><SL>{t.par.comm}</SL><div className="space-y-4 mb-4">{filtPar.filter(p=>p.role!=="parent").map((p,i)=>{const isOwn=p.id===user.id||p.name===user.name;const roleColor={teacher:"from-amber-500 to-orange-500",admin:"from-rose-500 to-pink-600",chairman:"from-violet-600 to-indigo-600"}[p.role]||"from-violet-600 to-indigo-600";return(<div key={p.id} className="rounded-2xl overflow-hidden shadow-md" style={{background:"#fff",border:"1px solid #ede9fe"}}><div className={`h-1.5 bg-gradient-to-r ${roleColor}`}/><div className="p-4 flex items-center gap-4"><span className="text-sm font-black text-slate-400 w-6 flex-shrink-0 text-center">{i+1}</span><Av name={ua?p.name:p.nameRu} photo={p.photo} sz="lg"/><div className="flex-1 min-w-0"><p className="font-bold text-slate-900 text-base leading-snug">{ua?p.name:p.nameRu}{isNewReg(p)&&<span className="ml-2 text-xs font-bold bg-green-100 text-green-600 px-1.5 py-0.5 rounded-full align-middle">new</span>}{helpCounts[p.id]>0&&<span className="ml-1 text-xs font-bold bg-purple-100 text-purple-600 px-1.5 py-0.5 rounded-full align-middle">🤝{helpCounts[p.id]}</span>}</p><div className="flex flex-wrap gap-2 mt-0.5"><PhoneNum phone={p.phone}/>{p.phone2&&<PhoneNum phone={p.phone2}/>}</div>{p.tgUsername&&<a href={`https://t.me/${p.tgUsername}`} target="_blank" onClick={e=>{e.stopPropagation();if(window.Telegram?.WebApp?.openTelegramLink){e.preventDefault();window.Telegram.WebApp.openTelegramLink(`https://t.me/${p.tgUsername}`);}}} className="inline-flex items-center gap-1 mt-1 text-xs font-semibold text-blue-500 hover:text-blue-700">✈️ @{p.tgUsername}</a>}{p.comment&&<p className="text-xs text-slate-400 mt-1 italic">"{p.comment}"</p>}</div><div className="flex flex-col items-end gap-2"><span className={`text-xs font-bold px-3 py-1 rounded-full text-white bg-gradient-to-r ${roleColor}`}>{t.roles[p.role]}</span><div className="flex gap-1">{(canPost||isOwn)&&<button onClick={()=>{setEditPar({...p,comment:p.comment||""});setModal("editPar");}} className="w-7 h-7 flex items-center justify-center rounded-lg bg-slate-100 hover:bg-blue-100 text-slate-400 hover:text-blue-500 text-sm transition-colors">✏️</button>}{canPost&&<button onClick={()=>setParents(x=>x.filter(q=>q.id!==p.id))} className="w-7 h-7 flex items-center justify-center rounded-lg bg-slate-100 hover:bg-red-100 text-slate-400 hover:text-red-500 text-sm transition-colors">✕</button>}</div></div></div></div>);})}</div></>}
           <SL>{t.par.all}</SL>
