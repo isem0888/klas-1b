@@ -1054,7 +1054,7 @@ function MainApp({lang,setLang,user,onChangeRole,onLogout}){
                               ?<span className="text-xs font-bold px-2 py-0.5 rounded-full bg-slate-100 text-slate-500">✅ {ua?"Завершений":"Завершён"}</span>
                               :canFin&&<button onClick={()=>{if(window.confirm(ua?"Завершити цей збір?":"Завершить этот сбор?"))closeCol(col.id);}} className="text-xs font-bold px-2 py-1 rounded-full bg-emerald-50 hover:bg-emerald-100 text-emerald-700 border border-emerald-200 transition-colors">{ua?"Завершити":"Завершить"}</button>
                             }
-                            {canFin&&<button onClick={()=>delCol(col.id)} className="w-6 h-6 flex items-center justify-center rounded-lg bg-slate-100 hover:bg-red-100 text-slate-400 hover:text-red-500 text-xs transition-colors">✕</button>}
+                            {(canFin||user.role==="chairman")&&<button onClick={()=>{if(window.confirm(ua?"Видалити цей збір?":"Удалить этот сбор?"))delCol(col.id);}} className="w-6 h-6 flex items-center justify-center rounded-lg bg-slate-100 hover:bg-red-100 text-slate-400 hover:text-red-500 text-xs transition-colors">✕</button>}
                           </div>
                         </div>
                         <div className="flex items-center gap-2 mb-3">
